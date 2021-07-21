@@ -1,0 +1,72 @@
+{% extends 'index.html' %}
+
+{% block title %}
+Log In
+{% endblock %}
+
+
+{% block contents %}
+<div class="card">
+    <div class="card-header">
+        <h4>Карточка сотрудника</h4>
+    </div>
+    <div class="card-body">
+
+        <table class="table table-hover">
+            <tbody>
+            <tr>
+                <td>ФИО</td>
+                <td>{{ profile.user.last_name }} {{ profile.user.first_name }} {{ profile.father_name }}</td>
+            </tr>
+            <tr>
+                <td>Должность</td>
+                <td>{{ profile.position }}</td>
+            </tr>
+            <tr>
+                <td>Табельный номер</td>
+                <td>{{ profile.tabel_num }}</td>
+            </tr>
+            <tr>
+                <td>Почта</td>
+                <td>{% if profile.user.email %}{{ profile.user.email }}{% else %}Неизвестно{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Телефон</td>
+                <td>{% if profile.phone_number %}{{ profile.phone_number }}{% else %}Неизвестно{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Статус</td>
+                <td>
+
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-sm-10">
+                                <span class="{{ profile.user_location.loc_class }}">{{ profile.user_location.location }}</span>
+                            </div>
+                            <div class="col-sm-2">
+                                <a class="btn btn-outline-success btn-sm" href="{% url 'user_update' profile.url %}"
+                                   role="button">Изменить</a>
+                            </div>
+                        </div>
+                    </div>
+
+                </td>
+            </tr>
+            {% if profile.description %}
+            <tr>
+                <td>Описание</td>
+                <td>{{ profile.description }}</td>
+            </tr>
+            {% endif %}
+            </tbody>
+        </table>
+
+    </div>
+    <div class="card-footer">
+        {% if profile.whenpublished %}Изменен: {{ profile.whenpublished }} назад{% else %} Дата изменения неизвестна
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}
