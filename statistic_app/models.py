@@ -3,8 +3,10 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
-from django.utils.text import slugify
 from django.utils import timezone as django_tz
+from django.utils.text import slugify
+
+
 
 class UserLocation(models.Model):
     location = models.CharField("Местоположение пользователя", max_length=200, unique=True)
@@ -30,15 +32,21 @@ class Profile(models.Model):
                            blank=True)
     phone_number = models.CharField(max_length=12, blank=True, null=True)
     description = models.TextField("Описание события", null=True, blank=True)
-    pub_date = models.DateTimeField('Время изменения', default=django_tz.now)
+    pub_date = models.DateField('Время изменения', default=django_tz.now)
 
     def whenpublished(self):
-        now = timezone.now()
+        now = timezone.now().date()
 
         diff = now - self.pub_date
 
-        return f"{diff.days} дней {diff.seconds // 60} минут"
+        if diff.days == 0:
+            return "Сегодня"
+        if diff.days == 1:
+            return "1 день назад"
+        if diff.days < 5:
+            return f"{diff.days} дня назад"
 
+        return f"{diff.days} дней назад"
 
     def __str__(self):
         return self.user.username

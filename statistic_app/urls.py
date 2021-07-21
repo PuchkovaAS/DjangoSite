@@ -15,10 +15,11 @@ Including another URLconf
 """
 from django.urls import path
 
-from .views import index, UsersView, UserDetailView, UserLocationAdd, UsersTagView
+from .views import index, UsersView, UserDetailView, UserLocationAdd, UsersFilterView
 
 urlpatterns = [
     path('', index, name='main_view'),
+    path('filter/', UsersFilterView.as_view(), name='filter'),
     path('user', UsersView.as_view(), name='user_list'),
     path('user/<slug:slug>/', UserDetailView.as_view(), name='user_detail'),
     path('user/<slug:slug>/update/', UserLocationAdd.as_view(), name='user_update'),

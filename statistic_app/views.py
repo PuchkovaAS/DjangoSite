@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, DetailView, ListView, UpdateView
 
-from .models import Profile
+from .models import Profile, UserLocation
 
 
 class MainView(TemplateView):
@@ -15,18 +15,34 @@ def index(request):
     return render(request, "index.html")
 
 
-class UsersTagView(ListView):
-    model = Profile
+class UsersFilterView(ListView):
     template_name = "user/users_list.html"
+    paginate_by = 60
 
     def get_queryset(self):
-        queryset = self.model.objects.filter(user_location=self.request.user_location)
+        filter_data = self.request.GET.getlist("check_location")
+        self.filter_id = [int(data) for data in filter_data]
+        queryset = Profile.objects.filter(pk__in=[int(data) - 1 for data in filter_data])
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super(UsersFilterView, self).get_context_data(**kwargs)
+        context['location'] = UserLocation.objects.all()
+        context['filter_id'] = self.filter_id
+        return context
+
 
 class UsersView(ListView):
     model = Profile
     template_name = "user/users_list.html"
     queryset = Profile.objects.all()
+    paginate_by = 60
+
+    def get_context_data(self, **kwargs):
+        context = super(UsersView, self).get_context_data(**kwargs)
+        context['location'] = UserLocation.objects.all()
+        context['filter_id'] = list(range(1, len(context['location']) + 1))
+        return context
 
     # View
     # def get(self, request):

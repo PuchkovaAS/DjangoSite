@@ -4,6 +4,19 @@
 Log In
 {% endblock %}
 
+{% block filter %}
+<label class="form-label">Фильтры:</label>
+<form action="{% url 'filter' %}" method="get">
+    {% for loc in location %}
+    <div class="form-check">
+        <input class="form-check-input" name="check_location" type="checkbox" value="{{ loc.id }}" {% if loc.id in filter_id %} checked {% endif %}>
+        <span class="{{ loc.loc_class }}">{{ loc.location }}</span>
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-success my-3 btn-sm">Найти</button>
+</form>
+{% endblock %}
+
 
 {% block contents %}
 <h2>Список сотрудников</h2>
@@ -22,7 +35,7 @@ Log In
         {% for user in profile_list %}
         <tr>
             <td>{{ forloop.counter }}</td>
-            <td><a {% if user.url %} href="{% url 'user_detail' user.url %}"{% endif %}>
+            <td><a {% if user.url %} href="{% url 'user_detail' user.url %}" {% endif %}>
                 {{user.user.last_name }} {{ user.user.first_name }} {{ user.father_name }}</a></td>
             <td>{{ user.tabel_num }}</td>
             <td>{{ user.position }}</td>
