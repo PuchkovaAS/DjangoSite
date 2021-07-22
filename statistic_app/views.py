@@ -69,3 +69,17 @@ class UserLocationAdd(UpdateView):
     slug_field = "url"
     # queryset = Profile.objects.filter(url=slug_field)
     fields = ['user_location', 'description', 'pub_date']
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        request.POST = request.POST.copy()
+
+
+
+        request_new_obj = {key: value for key, value in request.POST if key != 'pub_date'}
+
+        print()
+        print(request_new_obj, sep='\n')
+        print(self.object)
+        print()
+        return super(UserLocationAdd, self).post(request, **kwargs)

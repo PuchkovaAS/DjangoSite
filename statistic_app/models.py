@@ -7,7 +7,6 @@ from django.utils import timezone as django_tz
 from django.utils.text import slugify
 
 
-
 class UserLocation(models.Model):
     location = models.CharField("Местоположение пользователя", max_length=200, unique=True)
     loc_description = models.TextField("Описание местоположение", blank=True, null=True)
@@ -33,6 +32,10 @@ class Profile(models.Model):
     phone_number = models.CharField(max_length=12, blank=True, null=True)
     description = models.TextField("Описание события", null=True, blank=True)
     pub_date = models.DateField('Время изменения', default=django_tz.now)
+
+    def save(self, *args, **kwargs):
+        self.pub_date = timezone.now().date()
+        return super(Profile, self).save(*args, **kwargs)
 
     def whenpublished(self):
         now = timezone.now().date()
@@ -65,7 +68,7 @@ class UserStatistic(models.Model):
     user_location = models.ForeignKey(UserLocation, verbose_name="Местоположение пользователя",
                                       on_delete=models.SET_NULL, null=True)
     description = models.TextField("Описание события", null=True, blank=True)
-    pub_date = models.DateTimeField('Время публикации', default=datetime.now())
+    pub_date = models.DateTimeField('Время публикации', auto_now_add=True)
 
     def __str__(self):
         return self.user_name.user.username
