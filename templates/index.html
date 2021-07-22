@@ -26,7 +26,8 @@
             aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
-    <input class="form-control form-control-dark w-100" type="text" placeholder="Поиск" aria-label="Поиск">
+    <input class="form-control form-control-dark w-100 me-2" type="search" placeholder="Поиск" aria-label="Поиск" name="search_line">
+    <button class="btn btn-outline-warning my-2 my-sm-2 me-2" type="submit">Поиск</button>
     <ul class="navbar-nav px-3">
         {% if user.is_authenticated %}
         <li class="nav-item text-nowrap">

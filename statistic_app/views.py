@@ -1,8 +1,9 @@
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, DetailView, ListView, UpdateView
 
-from .models import Profile, UserLocation
+from .models import Profile, UserLocation, UserStatistic
 
 
 class MainView(TemplateView):
@@ -22,7 +23,7 @@ class UsersFilterView(ListView):
     def get_queryset(self):
         filter_data = self.request.GET.getlist("check_location")
         self.filter_id = [int(data) for data in filter_data]
-        queryset = Profile.objects.filter(pk__in=[int(data) - 1 for data in filter_data])
+        queryset = Profile.objects.filter(user_location__in=filter_data)
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -35,8 +36,18 @@ class UsersFilterView(ListView):
 class UsersView(ListView):
     model = Profile
     template_name = "user/users_list.html"
-    queryset = Profile.objects.all()
+
     paginate_by = 60
+
+    def get_queryset(self):
+        search_quary = self.request.GET.get('search_line', '')
+        if search_quary:
+            queryset = Profile.objects.filter(
+                Q(user__icontains=search_quary) | Q(father_name__icontains=search_quary) | Q(
+                    position__icontains=search_quary))
+        else:
+            queryset = Profile.objects.all()
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(UsersView, self).get_context_data(**kwargs)
@@ -54,6 +65,12 @@ class UserDetailView(DetailView):
     model = Profile
     slug_field = "url"
     template_name = "user/user_detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(UserDetailView, self).get_context_data(**kwargs)
+        context['statistics'] = UserStatistic.objects.filter(user_name=self.object).order_by('-pk')
+        context['statistic'] = context['statistics'][0]
+        return context
 
     # View
     # def get(self, request, slug):
@@ -73,13 +90,9 @@ class UserLocationAdd(UpdateView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         request.POST = request.POST.copy()
-
-
-
-        request_new_obj = {key: value for key, value in request.POST if key != 'pub_date'}
-
-        print()
-        print(request_new_obj, sep='\n')
-        print(self.object)
-        print()
+        new_obj = UserStatistic.objects.create(user_name=self.object,
+                                               user_location=UserLocation.objects.get(
+                                                   pk=int(request.POST['user_location'])),
+                                               description=request.POST['description'])
+        new_obj.save()
         return super(UserLocationAdd, self).post(request, **kwargs)
