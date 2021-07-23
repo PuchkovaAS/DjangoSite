@@ -6,6 +6,7 @@ from django.views.generic import TemplateView, ListView, UpdateView, View
 
 from .models import Profile, UserLocation, UserStatistic
 
+
 class MainView(LoginRequiredMixin, TemplateView):
     login_url = '/accounts/login'
     template_name = "index.html"
