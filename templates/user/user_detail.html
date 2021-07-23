@@ -84,8 +84,8 @@
                     <table class="table table-striped">
                         <tbody>
                         <th scope="col">Кол-во записей</th>
-                        <th scope="col"><input type="number" id="replyNumber" min="1" data-bind="value:replyNumber"
-                                               name="pagination"/></th>
+                        <th scope="col"><form action="" method="post">{% csrf_token %}<input type="number" id="replyNumber" min="1" data-bind="value:replyNumber"
+                                               name="pagination" value="{{ pagination }}"/></form></th>
                         </tbody>
                     </table>
                 </div>

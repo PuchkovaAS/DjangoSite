@@ -1,12 +1,13 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, DetailView, ListView, UpdateView
+from django.views.generic import TemplateView, ListView, UpdateView, View
 
 from .models import Profile, UserLocation, UserStatistic
 
-
-class MainView(TemplateView):
+class MainView(LoginRequiredMixin, TemplateView):
+    login_url = '/accounts/login'
     template_name = "index.html"
 
 
@@ -16,7 +17,8 @@ def index(request):
     return render(request, "index.html")
 
 
-class UsersFilterView(ListView):
+class UsersFilterView(LoginRequiredMixin, ListView):
+    login_url = '/accounts/login'
     template_name = "user/users_list.html"
     paginate_by = 60
 
@@ -33,43 +35,104 @@ class UsersFilterView(ListView):
         return context
 
 
-class UsersView(ListView):
+class UsersView(LoginRequiredMixin, View):
+    login_url = '/accounts/login'
     model = Profile
     template_name = "user/users_list.html"
-
     paginate_by = 60
+    search_quary = ''
+
+    def post(self, request):
+        self.search_quary = request.POST.get('search_line')
+        contex = self.get_context_data()
+        return render(request, self.template_name, contex)
+
+    def get(self, request):
+        contex = self.get_context_data()
+        return render(request, self.template_name, contex)
 
     def get_queryset(self):
-        search_quary = self.request.GET.get('search_line', '')
-        if search_quary:
-            queryset = Profile.objects.filter(
-                Q(user__icontains=search_quary) | Q(father_name__icontains=search_quary) | Q(
-                    position__icontains=search_quary))
+        if self.search_quary:
+            queryset = Profile.objects.filter(Q(user__last_name__icontains=self.search_quary) |
+                                              Q(user__first_name__icontains=self.search_quary) |
+                                              Q(father_name__icontains=self.search_quary) | Q(
+                position__icontains=self.search_quary))
         else:
             queryset = Profile.objects.all()
         return queryset
 
-    def get_context_data(self, **kwargs):
-        context = super(UsersView, self).get_context_data(**kwargs)
+    def get_context_data(self):
+        context = {}
+        context['profile_list'] = self.get_queryset()
         context['location'] = UserLocation.objects.all()
         context['filter_id'] = list(range(1, len(context['location']) + 1))
         return context
 
-    # View
-    # def get(self, request):
-    #     users = Profile.objects.all()
-    #     return render(request, "user/users_list.html", context={'users': users})
+
+# class UsersView(ListView):
+#     model = Profile
+#     template_name = "user/users_list.html"
+#
+#     paginate_by = 60
+#
+#
+#     def get_queryset(self):
+#         search_quary = self.request.GET.get('search_line', '')
+#         if search_quary:
+#             queryset = Profile.objects.filter(
+#                 Q(user__icontains=search_quary) | Q(father_name__icontains=search_quary) | Q(
+#                     position__icontains=search_quary))
+#         else:
+#             queryset = Profile.objects.all()
+#         return queryset
+#
+#     def get_context_data(self, **kwargs):
+#         context = super(UsersView, self).get_context_data(**kwargs)
+#         context['location'] = UserLocation.objects.all()
+#         context['filter_id'] = list(range(1, len(context['location']) + 1))
+#         return context
+
+# View
+# def get(self, request):
+#     users = Profile.objects.all()
+#     return render(request, "user/users_list.html", context={'users': users})
 
 
-class UserDetailView(DetailView):
+# class UserDetailView(DetailView):
+#     model = Profile
+#     slug_field = "url"
+#     template_name = "user/user_detail.html"
+#
+#     def get_context_data(self, **kwargs):
+#         context = super(UserDetailView, self).get_context_data(**kwargs)
+#         context['statistics'] = UserStatistic.objects.filter(user_name=self.object).order_by('-pk')
+#         context['statistic'] = context['statistics'][0]
+#         return context
+
+class UserDetailView(LoginRequiredMixin, View):
+    login_url = '/accounts/login'
     model = Profile
     slug_field = "url"
     template_name = "user/user_detail.html"
+    pagination = 10
 
-    def get_context_data(self, **kwargs):
-        context = super(UserDetailView, self).get_context_data(**kwargs)
-        context['statistics'] = UserStatistic.objects.filter(user_name=self.object).order_by('-pk')
+    def post(self, request, slug):
+        self.pagination = int(request.POST.get('pagination'))
+        contex = self.get_context_data(slug)
+        return render(request, self.template_name, contex)
+
+    def get(self, request, slug):
+        contex = self.get_context_data(slug)
+
+        return render(request, self.template_name, contex)
+
+    def get_context_data(self, slug):
+        context = {}
+        object = get_object_or_404(self.model, url__iexact=slug)
+        context['profile'] = get_object_or_404(self.model, url__iexact=slug)
+        context['statistics'] = UserStatistic.objects.filter(user_name=object).order_by('-pk')[:self.pagination]
         context['statistic'] = context['statistics'][0]
+        context['pagination'] = self.pagination
         return context
 
     # View
@@ -78,14 +141,15 @@ class UserDetailView(DetailView):
     #     return render(request, "user/user_edit.html", context={"user": user})
 
 
-class UserLocationAdd(UpdateView):
+class UserLocationAdd(LoginRequiredMixin, UpdateView):
+    login_url = '/accounts/login'
     model = Profile
     template_name = 'user/user_edit.html'
     # form_class = UserLocAddForm
     success_url = reverse_lazy('user_list')
     slug_field = "url"
     # queryset = Profile.objects.filter(url=slug_field)
-    fields = ['user_location', 'description', 'pub_date']
+    fields = ['user_location', 'description']
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()

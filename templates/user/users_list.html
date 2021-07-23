@@ -35,7 +35,7 @@
         {% for user in profile_list %}
         <tr>
             <td>{{ forloop.counter }}</td>
-            <td><a {% if user.url %} href="{% url 'user_detail' user.url %}" {% endif %}>
+            <td><a {% if user.url %} href="{{ user.get_absolute_url }}" {% endif %}>
                 {{user.user.last_name }} {{ user.user.first_name }} {{ user.father_name }}</a></td>
             <td>{{ user.tabel_num }}</td>
             <td>{{ user.position }}</td>

@@ -14,14 +14,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
+from django.views.generic import RedirectView
 
 from .views import index, UsersView, UserDetailView, UserLocationAdd, UsersFilterView
 
 urlpatterns = [
-    path('', index, name='main_view'),
+    path('', RedirectView.as_view(url="/user/"), name='main_view'),
     path('filter/', UsersFilterView.as_view(), name='filter'),
-    path('user', UsersView.as_view(), name='user_list'),
-    path('user/<slug:slug>/', UserDetailView.as_view(), name='user_detail'),
-    path('user/<slug:slug>/update/', UserLocationAdd.as_view(), name='user_update'),
+    path('user/', UsersView.as_view(), name='user_list'),
+    path('user/<str:slug>/', UserDetailView.as_view(), name='user_detail'),
+    path('user/<str:slug>/update/', UserLocationAdd.as_view(), name='user_update'),
 
 ]

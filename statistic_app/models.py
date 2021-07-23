@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.utils import timezone as django_tz
 from django.utils.text import slugify
@@ -43,6 +44,10 @@ class Profile(models.Model):
     phone_number = models.CharField(max_length=12, blank=True, null=True)
     description = models.TextField("Описание события", null=True, blank=True)
 
+    class Meta:
+        # критерии сортировки
+        ordering = ['-user.username']
+
     def save(self, *args, **kwargs):
         self.pub_date = timezone.now().date()
         return super(Profile, self).save(*args, **kwargs)
@@ -60,6 +65,10 @@ class Profile(models.Model):
             return f"{diff.days} дня назад"
 
         return f"{diff.days} дней назад"
+
+    def get_absolute_url(self):
+        """генерирует ссылку вместо {% url 'post_detail_url' slug=post.slug%}"""
+        return reverse('user_detail', kwargs={'slug': self.url})
 
     def __str__(self):
         return self.user.username
