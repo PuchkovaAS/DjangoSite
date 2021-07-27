@@ -132,7 +132,8 @@ class UserDetailView(LoginRequiredMixin, View):
         object = get_object_or_404(self.model, url__iexact=slug)
         context['profile'] = get_object_or_404(self.model, url__iexact=slug)
         context['statistics'] = UserStatistic.objects.filter(user_name=object).order_by('-pk')[:self.pagination]
-        context['statistic'] = context['statistics'][0]
+        if context['statistics']:
+            context['statistic'] = context['statistics'][0]
         context['pagination'] = self.pagination
         return context
 
