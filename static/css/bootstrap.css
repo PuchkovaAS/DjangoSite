@@ -1958,6 +1958,12 @@ progress {
   padding: 0.25rem 0.25rem;
 }
 
+th:first-child, td:first-child
+{
+  position:sticky;
+}
+
+
 .table-bordered > :not(caption) > * {
   border-width: 1px 0;
 }

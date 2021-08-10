@@ -21,3 +21,7 @@ a.edit, a.delete {
     display: none;
 }
 
+th:first-child, td:first-child
+{
+  position:sticky;
+}

@@ -53,6 +53,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'django_site.urls'
 
 TEMPLATES = [
+
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'templates')],

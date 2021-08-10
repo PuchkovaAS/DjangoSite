@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
@@ -5,6 +7,14 @@ from django.urls import reverse_lazy
 from django.views.generic import TemplateView, ListView, UpdateView, View
 
 from .models import Profile, UserLocation, UserStatistic
+from .my_data import PersonData
+
+from django.template.defaulttags import register
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
 
 
 class MainView(LoginRequiredMixin, TemplateView):
@@ -68,6 +78,61 @@ class UsersView(LoginRequiredMixin, View):
         context['location'] = UserLocation.objects.all()
         context['filter_id'] = list(range(1, len(context['location']) + 1))
         return context
+
+
+class UserStatistics(LoginRequiredMixin, View):
+    login_url = '/accounts/login'
+    model = Profile
+    template_name = "user/statistics.html"
+    paginate_by = 60
+    search_quary = ''
+    delta = 28
+    WEEKDAYS = {
+        1: 'Пн',
+        2: 'Вт',
+        3: 'Ср',
+        4: 'Чт',
+        5: 'Пт',
+        6: 'Сб',
+        7: 'Вс'
+    }
+
+
+    def get_statistics(self, users):
+        user_statistics = {}
+        for user in users:
+            # data = UserStatistic.objects.filter(
+            #     pub_date__range=[(datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d"),
+            #                      datetime.now().strftime("%Y-%m-%d")], user_name=user)
+            data_DB = UserStatistic.objects.filter(user_name=user)
+            new_user_stat = PersonData(data=data_DB, date_time=self.date_time)
+            result = new_user_stat.get_calendar()
+            user_statistics.update({user.user.username: result})
+            # for d in data:
+            #     print(user, d.user_location, d.pub_date, sep='\t', end='\n')
+            # print(user_statistics[user])
+        return user_statistics
+
+    def get_date_time(self, current_time):
+        end = datetime.now() - timedelta(days=self.delta * (current_time - 1))
+        start = end - timedelta(days=self.delta)
+
+        date_generated = [start + timedelta(days=x) for x in range(1, (end - start).days + 1)]
+        return list(reversed([date.date() for date in date_generated]))
+
+    def get(self, request):
+        self.page_number = request.GET.get("page", 1)
+        self.date_time = self.get_date_time(int(self.page_number))
+        context = {}
+        context['profile_list'] = Profile.objects.all()
+        context['user_statistics'] = self.get_statistics(context['profile_list'])
+        context['location'] = UserLocation.objects.all()
+        context['filter_id'] = list(range(1, len(context['location']) + 1))
+        context["date_time"] = [{'weekday': self.WEEKDAYS[day.isoweekday()], 'day': day.strftime("%d.%m.%y")} for day in self.date_time]
+        context["prev_url"] = f'?page={int(self.page_number) - 1}' if int(self.page_number) > 1 else ''
+        context["next_url"] = f'?page={int(self.page_number) + 1}'
+        # print(context['user_statistics'])
+        return render(request, self.template_name, context=context)
 
 
 # class UsersView(ListView):

@@ -18,11 +18,13 @@ class UserLocation(models.Model):
         ('badge rounded-pill bg-dark', 'темный')
 
     ]
-
     location = models.CharField("Местоположение пользователя", max_length=200, unique=True)
     loc_description = models.TextField("Описание местоположение", blank=True, null=True)
     loc_class = models.CharField("Класс bootstrap", max_length=200, choices=BOOTSTRAP4_STYLE,
-                                 default='badge badge-pill badge-primary')
+                                 default='badge badge-pill bg-dark')
+
+    def table_class(self):
+        return self.loc_class.split('bg-')[-1].split(' ')[0]
 
     def __str__(self):
         return self.location

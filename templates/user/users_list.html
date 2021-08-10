@@ -5,16 +5,26 @@
 {% endblock %}
 
 {% block filter %}
-<label class="form-label">Фильтры:</label>
-<form action="{% url 'filter' %}" method="get">
-    {% for loc in location %}
-    <div class="form-check">
-        <input class="form-check-input" name="check_location" type="checkbox" value="{{ loc.id }}" {% if loc.id in filter_id %} checked {% endif %}>
-        <span class="{{ loc.loc_class }}">{{ loc.location }}</span>
+<div class="d-grid gap-3">
+
+  <div class="p-2 bg-light border"><a class="link-primary" href="{% url 'statistics' %}">Статистика за 28 дней</a></div>
+
+
+
+
+<div class="p-2 bg-light border">
+    <label class="form-label">Фильтры:</label>
+    <form action="{% url 'filter' %}" method="get">
+        {% for loc in location %}
+        <div class="form-check">
+            <input class="form-check-input" name="check_location" type="checkbox" value="{{ loc.id }}" {% if loc.id in filter_id %} checked {% endif %}>
+            <span class="{{ loc.loc_class }}">{{ loc.location }}</span>
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-success my-3 btn-sm">Найти</button>
+    </form>
+</div>
     </div>
-    {% endfor %}
-    <button type="submit" class="btn btn-success my-3 btn-sm">Найти</button>
-</form>
 {% endblock %}
 
 
