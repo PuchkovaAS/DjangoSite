@@ -1,3 +1,4 @@
+import operator
 from datetime import datetime, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -37,6 +38,8 @@ class UsersFilterView(LoginRequiredMixin, ListView):
         filter_data = self.request.GET.getlist("check_location")
         self.filter_id = [int(data) for data in filter_data]
         queryset = Profile.objects.filter(user_location__in=filter_data)
+        # ordered = sorted(queryset, key=operator.attrgetter('user.username'))
+        # print(ordered)
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -70,7 +73,9 @@ class UsersView(LoginRequiredMixin, View):
                 position__icontains=self.search_quary))
         else:
             queryset = Profile.objects.all()
-        return queryset
+
+        ordered = sorted(queryset, key=operator.attrgetter('user.username'))
+        return ordered
 
     def get_context_data(self):
         context = {}
@@ -124,7 +129,10 @@ class UserStatistics(LoginRequiredMixin, View):
         self.page_number = request.GET.get("page", 1)
         self.date_time = self.get_date_time(int(self.page_number))
         context = {}
-        context['profile_list'] = Profile.objects.all()
+        profiles = Profile.objects.all()
+        ordered = sorted(profiles, key=operator.attrgetter('user.username'))
+        
+        context['profile_list'] = ordered
         context['user_statistics'] = self.get_statistics(context['profile_list'])
         context['location'] = UserLocation.objects.all()
         context['filter_id'] = list(range(1, len(context['location']) + 1))
