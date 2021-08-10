@@ -4,6 +4,18 @@
 Общая статистика за месяц
 {% endblock %}
 
+{% block style %}
+<style>
+th:first-child, td:first-child{
+    position: sticky;
+    left: 0px;
+    z-index: 1;
+}
+
+</style>
+{% endblock %}
+
+
 {% block filter %}
 
 
@@ -31,10 +43,10 @@
 
 <h2>Статистика</h2>
 <div class="table-responsive">
-    <table class="table table-bordered table-sm">
+    <table class="table table-bordered table-sm table-fixed">
         <thead>
         <tr>
-            <th><p class="fs-6">ФИО</p></th>
+            <th><p class="fs-6"></p></th>
             {% for num in date_time %}
             <th><p class="{% if num.weekday == 'Сб' or num.weekday == 'Вс' %} bg-success text-white {% else %} bg-secondary text-white {% endif %} fs-6">{{ num.day }}
                 {{ num.weekday }}</p></th>
