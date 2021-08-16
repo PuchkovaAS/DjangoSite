@@ -109,7 +109,7 @@ class UserStatistics(LoginRequiredMixin, View):
             # data = UserStatistic.objects.filter(
             #     pub_date__range=[(datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d"),
             #                      datetime.now().strftime("%Y-%m-%d")], user_name=user)
-            data_DB = UserStatistic.objects.filter(user_name=user)
+            data_DB = UserStatistic.objects.filter(user_name=user).order_by('pub_date')
             new_user_stat = PersonData(data=data_DB, date_time=self.date_time)
             result = new_user_stat.get_calendar()
             user_statistics.update({user.user.username: result})
