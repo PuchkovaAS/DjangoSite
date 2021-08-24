@@ -8,9 +8,9 @@
 <div class="d-grid gap-3">
 
   <div class="p-2 bg-light border"><a class="link-primary" href="{% url 'statistics' %}">Статистика за 28 дней</a></div>
+{% endblock %}
 
-
-
+{% block filter1 %}
 
 <div class="p-2 bg-light border">
     <label class="form-label">Фильтры:</label>
@@ -42,14 +42,14 @@
         </tr>
         </thead>
         <tbody>
-        {% for user in profile_list %}
+        {% for user, location in profile_list %}
         <tr>
             <td>{{ forloop.counter }}</td>
             <td><a {% if user.url %} href="{{ user.get_absolute_url }}" {% endif %}>
                 {{user.user.last_name }} {{ user.user.first_name }} {{ user.father_name }}</a></td>
             <td>{{ user.tabel_num }}</td>
             <td>{{ user.position }}</td>
-            <td><span class="{{ user.user_location.loc_class }}">{{ user.user_location.location }}</span></td>
+            <td><span class="{{ location.user_location.loc_class }}">{{ location.user_location.location }}</span></td>
         </tr>
         {% endfor %}
         </tbody>

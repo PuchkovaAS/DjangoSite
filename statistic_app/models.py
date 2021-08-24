@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse
@@ -39,8 +41,8 @@ class Profile(models.Model):
     father_name = models.CharField("Отчество", max_length=200, blank=True, null=True)
     tabel_num = models.IntegerField(verbose_name="Табельный номер", default=0)
     position = models.CharField("Должность", max_length=200)
-    user_location = models.ForeignKey(UserLocation, verbose_name="Местоположение пользователя",
-                                      on_delete=models.SET_NULL, null=True)
+    # user_location = models.ForeignKey(UserLocation, verbose_name="Местоположение пользователя",
+    #                                   on_delete=models.SET_NULL, null=True)
     url = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL", default=None, null=True,
                            blank=True)
     phone_number = models.CharField(max_length=12, blank=True, null=True)
@@ -50,23 +52,23 @@ class Profile(models.Model):
         # критерии сортировки
         ordering = ['-user.username']
 
-    def save(self, *args, **kwargs):
-        self.pub_date = timezone.now().date()
-        return super(Profile, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     self.pub_date = timezone.now().date()
+    #     return super(Profile, self).save(*args, **kwargs)
 
-    def whenpublished(self):
-        now = timezone.now().date()
-
-        diff = now - self.pub_date
-
-        if diff.days == 0:
-            return "Сегодня"
-        if diff.days == 1:
-            return "1 день назад"
-        if diff.days < 5:
-            return f"{diff.days} дня назад"
-
-        return f"{diff.days} дней назад"
+    # def whenpublished(self):
+    #     now = timezone.now().date()
+    # 
+    #     diff = now - self.pub_date
+    # 
+    #     if diff.days == 0:
+    #         return "Сегодня"
+    #     if diff.days == 1:
+    #         return "1 день назад"
+    #     if diff.days < 5:
+    #         return f"{diff.days} дня назад"
+    # 
+    #     return f"{diff.days} дней назад"
 
     def get_absolute_url(self):
         """генерирует ссылку вместо {% url 'post_detail_url' slug=post.slug%}"""
@@ -89,7 +91,7 @@ class UserStatistic(models.Model):
     user_location = models.ForeignKey(UserLocation, verbose_name="Местоположение пользователя",
                                       on_delete=models.SET_NULL, null=True)
     description = models.TextField("Описание события", null=True, blank=True)
-    pub_date = models.DateField('Время публикации', auto_now_add=True)
+    pub_date = models.DateField('Время события', default=datetime.date.today, blank=False, null=False)
 
     def __str__(self):
         return self.user_name.user.username

@@ -41,7 +41,7 @@
                     <div class="container">
                         <div class="row">
                             <div class="col-sm-10">
-                                <span class="{{ profile.user_location.loc_class }}">{{ profile.user_location.location }}</span>
+                                <span class="{{ location.user_location.loc_class }}">{{ location.user_location.location }}</span>
                             </div>
                             <div class="col-sm-2">
                                 {% if user.is_authenticated and user.username == profile.user.username or user.is_superuser %}
@@ -65,7 +65,7 @@
 
     </div>
     <div class="card-footer">
-        {% if statistic.when_add %}Изменен: {{ statistic.when_add }}{% else %} Дата изменения неизвестна
+        {% if location.when_add %}Изменен: {{ location.when_add }}{% else %} Дата изменения неизвестна
         {% endif %}
     </div>
 </div>

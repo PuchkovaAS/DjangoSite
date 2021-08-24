@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Profile
+from .models import Profile, UserStatistic
 
 
 class UserLocAddForm(forms.ModelForm):
@@ -8,11 +8,11 @@ class UserLocAddForm(forms.ModelForm):
     # данный класс уже связан с моделью
 
     class Meta:
-        model = Profile
-        fields = ['user_location']
+        model = UserStatistic
+        fields = ['user_location', 'description', 'pub_date']
         widgets = {
             'user_location': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'description': forms.TextInput(attrs={'class': 'form-control'}),
-            'pub_date': forms.TextInput(attrs={'class': 'form-control'}),
+            'pub_date': forms.DateField(),
         }
 
