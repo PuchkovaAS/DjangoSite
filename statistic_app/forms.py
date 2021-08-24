@@ -11,8 +11,8 @@ class UserLocAddForm(forms.ModelForm):
         model = UserStatistic
         fields = ['user_location', 'description', 'pub_date']
         widgets = {
-            'user_location': forms.SelectMultiple(attrs={'class': 'form-control'}),
-            'description': forms.TextInput(attrs={'class': 'form-control'}),
-            'pub_date': forms.DateField(),
+            'user_location': forms.Select(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control'}),
+            'pub_date': forms.DateInput(format='%Y-%m-%d'),
         }
 

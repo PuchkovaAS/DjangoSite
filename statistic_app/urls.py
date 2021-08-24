@@ -16,7 +16,7 @@ Including another URLconf
 from django.urls import path
 from django.views.generic import RedirectView
 
-from .views import index, UsersView, UserDetailView, UserLocationAdd, UsersFilterView, UserStatistics
+from .views import  UsersView, UserDetailView, UsersFilterView, UserStatistics, UserLocationAdd
 
 urlpatterns = [
     path('', RedirectView.as_view(url="/user/"), name='main_view'),

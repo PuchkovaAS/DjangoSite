@@ -41,12 +41,12 @@ class Profile(models.Model):
     father_name = models.CharField("Отчество", max_length=200, blank=True, null=True)
     tabel_num = models.IntegerField(verbose_name="Табельный номер", default=0)
     position = models.CharField("Должность", max_length=200)
-    # user_location = models.ForeignKey(UserLocation, verbose_name="Местоположение пользователя",
-    #                                   on_delete=models.SET_NULL, null=True)
+    user_location = models.ForeignKey(UserLocation, verbose_name="Местоположение пользователя",
+                                      on_delete=models.SET_NULL, null=True)
     url = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL", default=None, null=True,
                            blank=True)
     phone_number = models.CharField(max_length=12, blank=True, null=True)
-    description = models.TextField("Описание события", null=True, blank=True)
+    # description = models.TextField("Описание события", null=True, blank=True)
 
     class Meta:
         # критерии сортировки

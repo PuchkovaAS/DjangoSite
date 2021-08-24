@@ -34,19 +34,20 @@ class UsersFilterView(LoginRequiredMixin, ListView):
     login_url = '/accounts/login'
     template_name = "user/users_list.html"
     paginate_by = 60
+    filter_id = []
 
     def get_queryset(self):
         filter_data = self.request.GET.getlist("check_location")
         self.filter_id = [int(data) for data in filter_data]
         queryset = Profile.objects.filter(user_location__in=filter_data)
         # ordered = sorted(queryset, key=operator.attrgetter('user.username'))
-        # print(ordered)
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super(UsersFilterView, self).get_context_data(**kwargs)
         context['location'] = UserLocation.objects.all()
         context['filter_id'] = self.filter_id
+
         return context
 
 
@@ -224,28 +225,29 @@ class UserDetailView(LoginRequiredMixin, View):
 
 class UserLocationAdd(LoginRequiredMixin, View):
 
-    # form_model = UserLocAddForm
+    form_model = UserLocAddForm
     login_url = '/accounts/login'
-    # model = UserStatistic
+    model = UserStatistic
     template = 'user/user_edit.html'
-    # success_url = reverse_lazy('user_list')
-    # fields = ['user_location', 'description', 'pub_date']
+    success_url = reverse_lazy('user_list')
+    fields = ['user_location', 'description', 'pub_date']
 
-    def get(self, request):
-        # form = self.form_model()
-        return render(request=request, template_name=self.template, context={})
+    def get(self, request, slug):
+        form = self.form_model()
+        return render(request=request, template_name=self.template, context={'form': form})
 
-    # def post(self, request):
-    #     prof_slug = request.build_absolute_uri().split('/')[-3]
-    #     profile = Profile.objects.get(url=prof_slug)
-    #     request.POST = request.POST.copy()
-    #     new_obj = UserStatistic.objects.create(user_name=profile,
-    #                                            user_location=UserLocation.objects.get(
-    #                                                pk=int(request.POST['user_location'])),
-    #                                            description=request.POST['description'],
-    #                                            pub_date=request.POST['pub_date'])
-    #     new_obj.save()
-    #     return redirect(self.success_url)
+    def post(self, request, slug):
+        # prof_slug = request.build_absolute_uri().split('/')[-3]
+        profile = Profile.objects.get(url=slug)
+        request.POST = request.POST.copy()
+        new_obj = UserStatistic.objects.create(user_name=profile,
+                                               user_location=UserLocation.objects.get(
+                                                   pk=int(request.POST['user_location'])),
+                                               description=request.POST['description'],
+                                               pub_date=request.POST['pub_date'])
+        new_obj.save()
+        Profile.objects.filter(user=profile).update(user_location=UserStatistic.objects.filter(user_name=profile).order_by('-pub_date')[:1][0])
+        return redirect(self.success_url)
 
 
 # class UserLocationAdd(LoginRequiredMixin, UpdateView):

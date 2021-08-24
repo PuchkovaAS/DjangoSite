@@ -24,8 +24,9 @@
         <span class="navbar-toggler-icon"></span>
     </button>
     {% if '/user' in request.get_full_path and profile is defined %}
-    <form action="" method="post" class="w-100 me-2">{% csrf_token %}
-    <input class="form-control form-control-dark w-100 me-2" type="search" placeholder="Поиск" aria-label="Поиск"
+    <form action="" method="post" class="w-100 me-2">
+        {% csrf_token %}
+        <input class="form-control form-control-dark w-100 me-2" type="search" placeholder="Поиск" aria-label="Поиск"
            name="search_line">
     </form>
     {% endif %}

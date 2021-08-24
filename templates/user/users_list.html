@@ -9,9 +9,7 @@
 
   <div class="p-2 bg-light border"><a class="link-primary" href="{% url 'statistics' %}">Статистика за 28 дней</a></div>
 {% endblock %}
-
 {% block filter1 %}
-
 <div class="p-2 bg-light border">
     <label class="form-label">Фильтры:</label>
     <form action="{% url 'filter' %}" method="get">
