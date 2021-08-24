@@ -238,16 +238,22 @@ class UserLocationAdd(LoginRequiredMixin, View):
 
     def post(self, request, slug):
         # prof_slug = request.build_absolute_uri().split('/')[-3]
-        profile = Profile.objects.get(url=slug)
-        request.POST = request.POST.copy()
-        new_obj = UserStatistic.objects.create(user_name=profile,
-                                               user_location=UserLocation.objects.get(
-                                                   pk=int(request.POST['user_location'])),
-                                               description=request.POST['description'],
-                                               pub_date=request.POST['pub_date'])
-        new_obj.save()
-        Profile.objects.filter(user=profile).update(user_location=UserStatistic.objects.filter(user_name=profile).order_by('-pub_date')[:1][0])
-        return redirect(self.success_url)
+        bound_form = self.form_model(request.POST)
+        if bound_form.is_valid():
+            profile = Profile.objects.get(url=slug)
+            request.POST = request.POST.copy()
+            new_obj = UserStatistic.objects.create(user_name=profile,
+                                                   user_location=UserLocation.objects.get(
+                                                       pk=int(request.POST['user_location'])),
+                                                   description=request.POST['description'],
+                                                   pub_date=request.POST['pub_date'])
+            new_obj.save()
+            # profile.user_location = UserStatistic.objects.filter(user_name=profile).order_by('-pub_date')[:1][0]
+            # profile.save()
+            return redirect(self.success_url)
+        else:
+            return render(request, self.template, context={'form': bound_form})
+
 
 
 # class UserLocationAdd(LoginRequiredMixin, UpdateView):
