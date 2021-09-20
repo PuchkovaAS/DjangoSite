@@ -4,14 +4,13 @@ from datetime import datetime, timedelta
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.defaulttags import register
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, ListView, UpdateView, View, CreateView
+from django.views.generic import TemplateView, ListView, View
 
 from .forms import UserLocAddForm
 from .models import Profile, UserLocation, UserStatistic
 from .my_data import PersonData
-
-from django.template.defaulttags import register
 
 
 @register.filter
@@ -123,8 +122,11 @@ class UserStatistics(LoginRequiredMixin, View):
             # print(user_statistics[user])
         return user_statistics
 
-    def get_date_time(self, current_time):
-        end = datetime.now() - timedelta(days=self.delta * (current_time - 1))
+    def get_date_time(self, current_time, certain_time=None):
+        if certain_time:
+            end = datetime.strptime(certain_time, '%Y-%m-%d')
+        else:
+            end = datetime.now() - timedelta(days=self.delta * (current_time - 1))
         start = end - timedelta(days=self.delta)
 
         date_generated = [start + timedelta(days=x) for x in range(1, (end - start).days + 1)]
@@ -132,7 +134,8 @@ class UserStatistics(LoginRequiredMixin, View):
 
     def get(self, request):
         self.page_number = request.GET.get("page", 1)
-        self.date_time = self.get_date_time(int(self.page_number))
+        self.date_time = self.get_date_time(current_time=int(self.page_number),
+                                            certain_time=request.GET.get('date', None))
         context = {}
         profiles = Profile.objects.all()
         ordered = sorted(profiles, key=operator.attrgetter('user.username'))
@@ -145,6 +148,8 @@ class UserStatistics(LoginRequiredMixin, View):
                                 self.date_time]
         context["prev_url"] = f'?page={int(self.page_number) - 1}' if int(self.page_number) > 1 else ''
         context["next_url"] = f'?page={int(self.page_number) + 1}'
+        # context["date_url"] = request.GET.get("date", 1)
+
         # print(context['user_statistics'])
         return render(request, self.template_name, context=context)
 
@@ -224,7 +229,6 @@ class UserDetailView(LoginRequiredMixin, View):
 
 
 class UserLocationAdd(LoginRequiredMixin, View):
-
     form_model = UserLocAddForm
     login_url = '/accounts/login'
     model = UserStatistic
@@ -253,8 +257,6 @@ class UserLocationAdd(LoginRequiredMixin, View):
             return redirect(self.success_url)
         else:
             return render(request, self.template, context={'form': bound_form})
-
-
 
 # class UserLocationAdd(LoginRequiredMixin, UpdateView):
 #     login_url = '/accounts/login'

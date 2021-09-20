@@ -18,6 +18,7 @@ from django.shortcuts import redirect
 from django.urls import path, include
 
 urlpatterns = [
+    path('grappelli/', include('grappelli.urls')), # grappelli URLS
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('', include('statistic_app.urls')),
