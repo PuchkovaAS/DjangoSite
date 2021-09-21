@@ -6,11 +6,56 @@
 
 {% block style %}
 <style>
+<!--.table td, .table th {-->
+<!--    min-width: 50px;-->
+<!--    max-width: 80px;-->
+<!--}-->
 th:first-child, td:first-child{
     position: sticky;
     left: 0px;
     z-index: 1;
 }
+
+@-webkit-keyframes scroll {
+0% {
+-webkit-transform: translate(0, 0);
+transform: translate(0, 0);
+}
+100% {
+-webkit-transform: translate(-100%, 0);
+transform: translate(-100%, 0)
+}
+}
+
+@keyframes scroll {
+0% {
+transform: translate(0, 0);
+}
+100% {
+transform: translate(-100%, 0)
+}
+}
+
+.marquee {
+max-width: 100%;
+white-space: nowrap;
+overflow: hidden;
+}
+
+.marquee * {
+display: inline-block;
+padding-left: 100%;
+-webkit-animation: scroll 21s infinite linear;
+animation: scroll 21s infinite linear;
+}
+.marquee *:hover {
+-webkit-animation-play-state: paused;
+animation-play-state: paused;
+}
+
+
+
+
 
 </style>
 {% endblock %}
@@ -18,8 +63,7 @@ th:first-child, td:first-child{
 
 {% block filter %}
 
-
-<label class="form-label">Локации:</label>
+<label class="form-label">Местоположение:</label>
 {% for loc in location %}
 <div class="">
     <span class="{{ loc.loc_class }}">{{ loc.location }}</span>
@@ -31,41 +75,52 @@ th:first-child, td:first-child{
 {% block contents %}
 <nav aria-label="...">
     <div class="row mb-2">
-      <div class="col-6 themed-grid-col">
-          <ul class="pagination pagination">
-            <li class="page-item {% if prev_url == '' %}disabled{% endif %}">
-                <a class="page-link" href="{{ prev_url }}" tabindex="-1">-28 дней</a>
-            </li>
-            <li class="page-item"><a class="page-link" href="?page=1">Сегодня</a></li>
-            <li class="page-item {% if next_url == '' %}disabled{% endif %}">
-                <a class="page-link" href="{{ next_url }}">+28 дней</a>
-            </li>
-          </ul>
-      </div>
-      <div class="col-6 themed-grid-col">
-
-
+        <div class="col-6 themed-grid-col">
+            <ul class="pagination pagination">
+                <li class="page-item {% if prev_url == '' %}disabled{% endif %}">
+                    <a class="page-link" href="{{ prev_url }}" tabindex="-1">-28 дней</a>
+                </li>
+                <li class="page-item"><a class="page-link" href="?page=1">Сегодня</a></li>
+                <li class="page-item {% if next_url == '' %}disabled{% endif %}">
+                    <a class="page-link" href="{{ next_url }}">+28 дней</a>
+                </li>
+            </ul>
+        </div>
+        <div class="col-6 themed-grid-col">
             <form action="" method="get">{% csrf_token %}
                 <div class="input-group">
                     <input type="date" class="form-control" id="date" name="date" placeholder="Дата">
                     <button type="submit" class="btn btn-primary" role="button" aria-disabled="true">Перейти</button>
                 </div>
             </form>
-
-
-      </div>
+        </div>
     </div>
 </nav>
 
+
 <h2>Статистика</h2>
+
+<!--<div class='d-flex justify-content-end'>-->
+<!--<a class="page-link"  tabindex="-1" href="{{ desc_sw }}">-->
+<!--        <div class="form-check">-->
+<!--            <input class="form-check-input" type="checkbox"  {% if desc_sw_value %} checked {% endif %}>-->
+<!--            <label class="form-check-label" for="flexCheckDefault">-->
+<!--                Комментарии-->
+<!--            </label>-->
+<!--        </div>-->
+<!--</a>-->
+<!--</div>-->
+
 <div class="table-responsive">
     <table class="table table-bordered table-sm table-fixed">
         <thead>
         <tr>
             <th><p class="fs-6"></p></th>
             {% for num in date_time %}
-            <th><p class="{% if num.weekday == 'Сб' or num.weekday == 'Вс' %} bg-success text-white {% else %} bg-secondary text-white {% endif %} fs-6">{{ num.day }}
-                {{ num.weekday }}</p></th>
+            <th>
+                <p class="{% if num.weekday == 'Сб' or num.weekday == 'Вс' %} bg-success text-white {% else %} bg-secondary text-white {% endif %} fs-6">
+                    {{ num.day }}
+                    {{ num.weekday }}</p></th>
             {% endfor %}
         </tr>
         </thead>
@@ -74,13 +129,26 @@ th:first-child, td:first-child{
 
         {% for profile in profile_list %}
         <tr>
-            <td><a {% if profile.url %} href="{{ profile.get_absolute_url }}" {% endif %}>
-                {{ profile.user.last_name }} {{ profile.user.first_name|slice:":255" }} </a></td>
+            <td>
+                <div class="bg-white text-dark">
+                    <a {% if profile.url %} href="{{ profile.get_absolute_url }}" {% endif %}>
+                        {{ profile.user.last_name }} {{ profile.user.first_name|slice:":255" }}
+                    </a>
+                </div>
+            </td>
             {% for data in user_statistics|get_item:profile.user.username %}
-                <td class="table-{{ data.color }}" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ data.info }}"></td>
+            <td class="table-{{ data.color }}" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ data.info }}">
+                <!--                <div class="text-white text-lowercase fs-6 text-wrap" style="width: 5rem;">-->
+                <!--                    {{ data.desc|slice:":12" }}-->
+                <!--                </div>-->
+                <span class="badge badge-secondary text-black-50 text-lowercase text-break text-wrap" style="width: 5rem;">{{ data.desc|slice:":25" }}</span>
+
+                <!--                    <span class="badge badge-light"></span>-->
+                <!--                    <div class="marquee"><span>{{ data.info }}</span></div>-->
+            </td>
             {% endfor %}
         </tr>
-         {% endfor %}
+        {% endfor %}
 
         </tbody>
     </table>

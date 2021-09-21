@@ -17,7 +17,7 @@ class PersonData:
         if self.index < 0:
             return [self.unknown]
 
-        return [{"color": self.data[self.index].user_location.table_class, "info": f"{self.data[self.index].user_location}\n{self.data[self.index].description}"}]
+        return [{"color": self.data[self.index].user_location.table_class, "info": f"{self.data[self.index].user_location}\n{self.data[self.index].description}", "desc":self.data[self.index].description}]
 
     def get_calendar(self):
         data_status = []

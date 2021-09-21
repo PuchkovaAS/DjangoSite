@@ -1,3 +1,4 @@
+import copy
 import operator
 from datetime import datetime, timedelta
 
@@ -133,8 +134,8 @@ class UserStatistics(LoginRequiredMixin, View):
         return list(reversed([date.date() for date in date_generated]))
 
     def get(self, request):
-        self.page_number = request.GET.get("page", 1)
-        self.date_time = self.get_date_time(current_time=int(self.page_number),
+        page_number = request.GET.get("page", 1)
+        self.date_time = self.get_date_time(current_time=int(page_number),
                                             certain_time=request.GET.get('date', None))
         context = {}
         profiles = Profile.objects.all()
@@ -146,8 +147,10 @@ class UserStatistics(LoginRequiredMixin, View):
         context['filter_id'] = list(range(1, len(context['location']) + 1))
         context["date_time"] = [{'weekday': self.WEEKDAYS[day.isoweekday()], 'day': day.strftime("%d.%m.%y")} for day in
                                 self.date_time]
-        context["prev_url"] = f'?page={int(self.page_number) - 1}' if int(self.page_number) > 1 else ''
-        context["next_url"] = f'?page={int(self.page_number) + 1}'
+        context["prev_url"] = f'?page={int(page_number) - 1}' if int(page_number) > 1 else ''
+        context["next_url"] = f'?page={int(page_number) + 1}'
+
+
         # context["date_url"] = request.GET.get("date", 1)
 
         # print(context['user_statistics'])
