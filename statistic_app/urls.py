@@ -16,7 +16,8 @@ Including another URLconf
 from django.urls import path
 from django.views.generic import RedirectView
 
-from .views import  UsersView, UserDetailView, UsersFilterView, UserStatistics, UserLocationAdd
+from .views import UsersView, UserDetailView, UsersFilterView, UserStatistics, UserLocationAdd, ProjectsView, AgentView, \
+    AgentDetailView, AgentEditView, ProjectDetailView
 
 urlpatterns = [
     path('', RedirectView.as_view(url="/user/"), name='main_view'),
@@ -25,5 +26,9 @@ urlpatterns = [
     path('user/', UsersView.as_view(), name='user_list'),
     path('user/<str:slug>/', UserDetailView.as_view(), name='user_detail'),
     path('user/<str:slug>/update/', UserLocationAdd.as_view(), name='user_update'),
-
+    path('project/', ProjectsView.as_view(), name='project_list'),
+    path('project/<str:slug>/', ProjectDetailView.as_view(), name='project_detail'),
+    path('agent/', AgentView.as_view(), name='agent_list'),
+    path('agent/<str:slug>/', AgentDetailView.as_view(), name='agent_detail'),
+    path('agent/<str:slug>/update/', AgentEditView.as_view(), name='agent_update'),
 ]

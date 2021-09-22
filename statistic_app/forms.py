@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Profile, UserStatistic
+from .models import Profile, UserStatistic, AgentProject
 
 
 class UserLocAddForm(forms.ModelForm):
@@ -16,3 +16,17 @@ class UserLocAddForm(forms.ModelForm):
             'pub_date': forms.DateInput(format='%Y-%m-%d'),
         }
 
+
+class AgentEditForm(forms.ModelForm):
+    # генерирует html формы
+    # данный класс уже связан с моделью
+    class Meta:
+        model = AgentProject
+        fields = ['position', 'description', 'location', 'phone_number', 'email']
+        widgets = {
+            'position': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control'}),
+            'location': forms.CheckboxSelectMultiple(attrs={'class': 'form-control'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(),
+        }

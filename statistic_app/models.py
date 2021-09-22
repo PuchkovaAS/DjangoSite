@@ -4,8 +4,9 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
-from django.utils import timezone as django_tz
 from django.utils.text import slugify
+
+from .my_data import transliterate
 
 
 class UserLocation(models.Model):
@@ -46,6 +47,7 @@ class Profile(models.Model):
     url = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL", default=None, null=True,
                            blank=True)
     phone_number = models.CharField(max_length=12, blank=True, null=True)
+
     # description = models.TextField("Описание события", null=True, blank=True)
 
     class Meta:
@@ -75,7 +77,7 @@ class Profile(models.Model):
         return reverse('user_detail', kwargs={'slug': self.url})
 
     def __str__(self):
-        return self.user.username
+        return f"{self.user.last_name} {self.user.first_name} {self.father_name}"
 
     def save(self, *args, **kwargs):
         self.url = slugify(str(self.user.username).lower() + str(self.tabel_num))
@@ -94,11 +96,132 @@ class UserStatistic(models.Model):
     pub_date = models.DateField('Время события', default=datetime.date.today, blank=False, null=False)
 
     def __str__(self):
-        return self.user_name.user.username
+
+        return f"{self.user_name.user.last_name} {self.user_name.user.first_name} {self.user_name.father_name} - {self.user_location}"
 
     class Meta:
         verbose_name = "Статистика пользователя"
         verbose_name_plural = "Статистика пользователей"
+
+    def when_add(self):
+        now = timezone.now().date()
+
+        diff = now - self.pub_date
+
+        if diff.days == 0:
+            return "Сегодня"
+        if diff.days == 1:
+            return "1 день назад"
+        if diff.days < 5:
+            return f"{diff.days} дня назад"
+
+        return f"{diff.days} дней назад"
+
+
+class Project(models.Model):
+    STATUS_PROJECT = [
+        ('Не начат', 'Не начат'),
+        ('Подготовка', 'Подготовка'),
+        ('В работе', 'В работе'),
+        ('Сдан', 'Сдан'),
+        ('Тех. обслуживание', 'Тех. обслуживание'),
+    ]
+
+    STATUS_STYLE_PROJECT = {
+        'Не начат': 'badge bg-danger',
+        'Подготовка': 'badge bg-secondary',
+        'В работе': 'badge bg-primary',
+        'Сдан': 'badge bg-success',
+        'Тех. обслуживание': 'badge bg-warning text-dark',
+    }
+
+    name = models.CharField("Название", max_length=200, blank=False, null=False, unique=True)
+
+    status = models.CharField("Статус проекта", max_length=200, choices=STATUS_PROJECT,
+                              default='Не начат')
+
+    # staff = models.ManyToManyField(AgentProject, verbose_name='Инагент', blank=True, related_name='Инагенты')
+    # staff
+    description = models.TextField("Описание события", null=True, blank=True)
+    tasks = models.TextField("Задачи", max_length=2000, blank=True, null=True)
+
+    url = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL", default=None, null=True,
+                           blank=True)
+
+    class Meta:
+        # критерии сортировки
+        ordering = ['-name']
+
+    def status_style(self):
+        return self.STATUS_STYLE_PROJECT[self.status]
+
+    def get_absolute_url(self):
+        """генерирует ссылку вместо {% url 'post_detail_url' slug=post.slug%}"""
+        return reverse('project_detail', kwargs={'slug': self.url})
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.url = slugify(f"{transliterate(str(self.name).lower())}")
+        super(Project, self).save()
+
+    class Meta:
+        verbose_name = "Проект"
+        verbose_name_plural = "Проекты"
+
+
+class AgentProject(models.Model):
+    first_name = models.CharField("Имя", max_length=200, blank=False, null=False)
+    last_name = models.CharField("Фамилия", max_length=200, blank=False, null=False)
+    father_name = models.CharField("Отчество", max_length=200, blank=False, null=False)
+
+    position = models.CharField(verbose_name="Должность", max_length=200)
+    description = models.TextField(verbose_name="Описание", null=True, blank=True)
+    location = models.ManyToManyField(Project, verbose_name='Объект', blank=True, related_name='agents')
+    # related_name для связи many to many чтобы найти по тегу все посты
+    phone_number = models.CharField(verbose_name='Телефон', max_length=200, blank=True, null=True)
+    email = models.EmailField(verbose_name='Почта', blank=True, null=True)
+
+    url = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL", default=None, null=True,
+                           blank=True)
+
+    class Meta:
+        # критерии сортировки
+        ordering = ['-second_name', '-first_name', '-father_name']
+
+    def get_full_name(self):
+        return f"{ self.last_name } { self.first_name } { self.father_name }"
+
+    def get_absolute_url(self):
+        """генерирует ссылку вместо {% url 'post_detail_url' slug=post.slug%}"""
+        return reverse('agent_detail', kwargs={'slug': self.url})
+
+    def __str__(self):
+        return f"{str(self.last_name)} {str(self.first_name)} {str(self.father_name)}"
+
+    def save(self, *args, **kwargs):
+        self.url = slugify(
+            f"{transliterate(str(self.last_name).lower())}_{transliterate(str(self.first_name).lower())}_{transliterate(str(self.father_name).lower())}_{datetime.datetime.now().microsecond}")
+        super(AgentProject, self).save()
+
+    class Meta:
+        verbose_name = "Инагент"
+        verbose_name_plural = "Инагенты"
+
+
+class HistoryProject(models.Model):
+    project = models.ForeignKey(Project, verbose_name="Проект", on_delete=models.SET_NULL, null=True)
+    pub_date = models.DateField('Время события', default=datetime.date.today, blank=False, null=False)
+
+    description = models.TextField("Описание", null=True, blank=True)
+
+    def __str__(self):
+        return self.project.name
+
+    class Meta:
+        verbose_name = "История проекта"
+        verbose_name_plural = "Истории проекта"
 
     def when_add(self):
         now = timezone.now().date()

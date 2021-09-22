@@ -1,0 +1,70 @@
+{% extends 'index.html' %}
+
+{% block title %}
+{{ agent.last_name }} {{ agent.first_name }}
+{% endblock %}
+
+
+{% block contents %}
+<div class="card">
+    <div class="card-header">
+        <h4>Карточка инагента</h4>
+    </div>
+    <div class="card-body">
+
+        <table class="table table-hover" id="telemetry_table1">
+            <tbody>
+            <tr>
+                <td>ФИО</td>
+                <td>{{ agent.get_full_name }}</td>
+            </tr>
+            <tr>
+                <td>Должность</td>
+                <td>{{ agent.position }}</td>
+            </tr>
+            <tr>
+                <td>Почта</td>
+                <td>{% if agent.email %}{{ agent.email }}{% else %}Неизвестно{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Телефон</td>
+                <td>{% if agent.phone_number %}{{ agent.phone_number }}{% else %}Неизвестно{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Объекты</td>
+                <td>
+
+                    <div class="container">
+                        <div class="row">
+                             <span class="">
+                                {% for loc in agent.location.all %}
+                                 <a href="{{ loc.get_absolute_url }}">
+                                     <span class="{{ loc.status_style }}" data-toggle="tooltip" data-placement="top" title="{{ loc.status }}">{{ loc.name }}</span>
+                                 </a>
+                                 <br>
+                                {% endfor %}
+                                </span>
+                        </div>
+                    </div>
+
+                </td>
+            </tr>
+            {% if agent.description %}
+            <tr>
+                <td>Описание</td>
+                <td>{{ agent.description }}</td>
+            </tr>
+            {% endif %}
+            </tbody>
+        </table>
+
+    </div>
+    <div class="card-footer">
+            {% if user.is_superuser %}
+               <a class="btn  btn-outline-success btn-sm " href="{% url 'agent_update' agent.url %}"
+                   role="button">Изменить</a>
+            {% endif %}
+    </div>
+</div>
+
+{% endblock %}

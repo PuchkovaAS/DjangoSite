@@ -1,4 +1,3 @@
-import copy
 import operator
 from datetime import datetime, timedelta
 
@@ -9,9 +8,10 @@ from django.template.defaulttags import register
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, ListView, View
 
-from .forms import UserLocAddForm
-from .models import Profile, UserLocation, UserStatistic
+from .forms import UserLocAddForm, AgentEditForm
+from .models import Profile, UserLocation, UserStatistic, Project, AgentProject
 from .my_data import PersonData
+from .utils import ObjectUpdateMixin
 
 
 @register.filter
@@ -150,7 +150,6 @@ class UserStatistics(LoginRequiredMixin, View):
         context["prev_url"] = f'?page={int(page_number) - 1}' if int(page_number) > 1 else ''
         context["next_url"] = f'?page={int(page_number) + 1}'
 
-
         # context["date_url"] = request.GET.get("date", 1)
 
         # print(context['user_statistics'])
@@ -240,8 +239,9 @@ class UserLocationAdd(LoginRequiredMixin, View):
     fields = ['user_location', 'description', 'pub_date']
 
     def get(self, request, slug):
+        profile = Profile.objects.get(url=slug)
         form = self.form_model()
-        return render(request=request, template_name=self.template, context={'form': form})
+        return render(request=request, template_name=self.template, context={'form': form, 'profile': profile})
 
     def post(self, request, slug):
         # prof_slug = request.build_absolute_uri().split('/')[-3]
@@ -260,6 +260,7 @@ class UserLocationAdd(LoginRequiredMixin, View):
             return redirect(self.success_url)
         else:
             return render(request, self.template, context={'form': bound_form})
+
 
 # class UserLocationAdd(LoginRequiredMixin, UpdateView):
 #     login_url = '/accounts/login'
@@ -280,3 +281,165 @@ class UserLocationAdd(LoginRequiredMixin, View):
 #                                                description=request.POST['description'])
 #         new_obj.save()
 #         return super(UserLocationAdd, self).post(request, **kwargs)
+class ProjectsView(LoginRequiredMixin, View):
+    login_url = '/accounts/login'
+    model = Profile
+    template_name = "project/project_list.html"
+    paginate_by = 60
+    search_quary = ''
+
+    def post(self, request):
+        self.search_quary = request.POST.get('search_line')
+        contex = self.get_context_data()
+        return render(request, self.template_name, contex)
+
+    def get(self, request):
+        contex = self.get_context_data()
+        return render(request, self.template_name, contex)
+
+    def get_queryset(self):
+        # if self.search_quary:
+        #     queryset = Project.objects.filter(Q(user__last_name__icontains=self.search_quary) |
+        #                                       Q(user__first_name__icontains=self.search_quary) |
+        #                                       Q(father_name__icontains=self.search_quary) | Q(
+        #         position__icontains=self.search_quary))
+        # else:
+        queryset = Project.objects.all()
+
+        ordered = sorted(queryset, key=operator.attrgetter('name'))
+        return ordered
+
+    def get_context_data(self):
+        context = {}
+        context['project_list'] = self.get_queryset()
+
+        return context
+
+
+class ProjectDetailView(LoginRequiredMixin, View):
+    login_url = '/accounts/login'
+    model = Project
+    slug_field = "url"
+    template_name = "project/project_detail.html"
+    pagination = 10
+
+    def post(self, request, slug):
+        self.pagination = int(request.POST.get('pagination'))
+        contex = self.get_context_data(slug)
+        return render(request, self.template_name, contex)
+
+    def get(self, request, slug):
+        contex = self.get_context_data(slug)
+
+        return render(request, self.template_name, contex)
+
+    def get_context_data(self, slug):
+        context = {}
+        object = get_object_or_404(self.model, url__iexact=slug)
+        context['project'] = object
+        # context['staff'] = get_object_or_404(AgentProject, location=object.id)
+        return context
+
+
+class AgentView(LoginRequiredMixin, View):
+    login_url = '/accounts/login'
+    model = Profile
+    template_name = "agent/agent_list.html"
+    paginate_by = 60
+    search_quary = ''
+
+    def post(self, request):
+        self.search_quary = request.POST.get('search_line')
+        contex = self.get_context_data()
+        return render(request, self.template_name, contex)
+
+    def get(self, request):
+        contex = self.get_context_data()
+        return render(request, self.template_name, contex)
+
+    def get_queryset(self):
+        # if self.search_quary:
+        #     queryset = Project.objects.filter(Q(user__last_name__icontains=self.search_quary) |
+        #                                       Q(user__first_name__icontains=self.search_quary) |
+        #                                       Q(father_name__icontains=self.search_quary) | Q(
+        #         position__icontains=self.search_quary))
+        # else:
+        queryset = AgentProject.objects.all()
+
+        ordered = sorted(queryset, key=operator.attrgetter('last_name'))
+        return ordered
+
+    def get_context_data(self):
+        context = {}
+        context['agent_list'] = self.get_queryset()
+
+        return context
+
+
+class AgentDetailView(LoginRequiredMixin, View):
+    login_url = '/accounts/login'
+    model = AgentProject
+    slug_field = "url"
+    template_name = "agent/agent_detail.html"
+    pagination = 10
+
+    def post(self, request, slug):
+        self.pagination = int(request.POST.get('pagination'))
+        contex = self.get_context_data(slug)
+        return render(request, self.template_name, contex)
+
+    def get(self, request, slug):
+        contex = self.get_context_data(slug)
+
+        return render(request, self.template_name, contex)
+
+    def get_context_data(self, slug):
+        context = {}
+        object = get_object_or_404(self.model, url__iexact=slug)
+        context['agent'] = get_object_or_404(self.model, url__iexact=slug)
+        return context
+
+    # View
+    # def get(self, request, slug):
+    #     user = Profile.objects.get(url=slug)
+    #     return render(request, "user/user_edit.html", context={"user": user})
+
+
+class AgentEditView(LoginRequiredMixin, ObjectUpdateMixin, View):
+    form_model = AgentEditForm
+    login_url = '/accounts/login'
+    model = AgentProject
+    template = 'agent/agent_edit.html'
+    success_url = reverse_lazy('agent_list')
+    fields = ['position', 'description', 'location', 'phone_number', 'email']
+
+    # def get(self, request, slug):
+    #     object = self.model.objects.get(slug__iexact=slug)
+    #     bound_form = self.form_model(instance=object)
+    #     return render(request, self.template, context={
+    #         'form': bound_form,
+    #         self.model.__name__.lower(): object,
+    #     })
+    #     # form = self.form_model()
+    #     # return render(request=request, template_name=self.template, context={'form': form})
+    #
+    # def post(self, request, slug):
+    #     # prof_slug = request.build_absolute_uri().split('/')[-3]
+    #     # bound_form = self.form_model(request.POST)
+    #     # if bound_form.is_valid():
+    #     #     profile = AgentProject.objects.get(url=slug)
+    #     #     request.POST = request.POST.copy()
+    #     #
+    #     #     return redirect(self.success_url)
+    #     # else:
+    #     #     return render(request, self.template, context={'form': bound_form})
+    #     object = self.model.objects.get(slug__iexact=slug)
+    #     bound_form = self.form_model(request.POST, instance=object)
+    #
+    #     if bound_form.is_valid():
+    #         new_object = bound_form.save()
+    #         return redirect(new_object)
+    #     return render(request, self.template, context={
+    #         'form': bound_form,
+    #         self.model.__name__.lower(): object,
+    #     })

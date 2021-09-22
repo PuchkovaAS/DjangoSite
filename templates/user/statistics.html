@@ -61,8 +61,9 @@ animation-play-state: paused;
 {% endblock %}
 
 
-{% block filter %}
 
+
+{% block filter %}
 <label class="form-label">Местоположение:</label>
 {% for loc in location %}
 <div class="">
@@ -130,18 +131,14 @@ animation-play-state: paused;
         {% for profile in profile_list %}
         <tr>
             <td>
-                <div class="bg-white text-dark">
-                    <a {% if profile.url %} href="{{ profile.get_absolute_url }}" {% endif %}>
-                        {{ profile.user.last_name }} {{ profile.user.first_name|slice:":255" }}
-                    </a>
-                </div>
+                    <a class="btn btn-light btn-sm" {% if profile.url %} href="{{ profile.get_absolute_url }}" {% endif %} role="button">{{ profile.user.last_name }} {{ profile.user.first_name|truncatechars:255 }}</a>
             </td>
             {% for data in user_statistics|get_item:profile.user.username %}
             <td class="table-{{ data.color }}" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ data.info }}">
                 <!--                <div class="text-white text-lowercase fs-6 text-wrap" style="width: 5rem;">-->
                 <!--                    {{ data.desc|slice:":12" }}-->
                 <!--                </div>-->
-                <span class="badge badge-secondary text-black-50 text-lowercase text-break text-wrap" style="width: 5rem;">{{ data.desc|slice:":25" }}</span>
+                <span class="badge badge-secondary text-black-50 text-lowercase text-break text-wrap" style="width: 5rem;">{{ data.desc|truncatechars:25 }}</span>
 
                 <!--                    <span class="badge badge-light"></span>-->
                 <!--                    <div class="marquee"><span>{{ data.info }}</span></div>-->
