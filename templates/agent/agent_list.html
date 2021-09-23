@@ -24,7 +24,7 @@
             {% for agent in agent_list %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                <td><a {% if agent.url %} href="{{ agent.get_absolute_url }}" {% endif %}>{{ agent.last_name }} {{ agent.first_name }} {{ agent.father_name }}</a></td>
+                <td><a {% if agent.url %} href="{{ agent.get_absolute_url }}" {% endif %}>{{ agent.get_full_name }}</a></td>
                 <td>{{ agent.position }}</td>
                 <td>{{ agent.phone_number }}</td>
                 <td>

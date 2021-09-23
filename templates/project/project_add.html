@@ -6,7 +6,7 @@
 
 
 {% block contents %}
-<h5 class="blog-post-title mb-3">{{ agentproject.get_full_name }}</h5>
+<h5 class="blog-post-title mb-3">{{ agentproject.last_name }} {{ agentproject.first_name }} {{ agentproject.father_name }}</h5>
 
 <form method="post">
     {% csrf_token %}

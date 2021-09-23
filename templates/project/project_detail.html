@@ -7,63 +7,169 @@
 {% block filter %}
 <label class="form-label">Инагенты:</label>
 <ul>
-  {% for worker in project.agents.all %}
-  <li>
-    <a href="{{ worker.get_absolute_url }}">
-      <span class=""  data-toggle="tooltip" data-placement="top" title="{{ tag.status }}">{{ worker.get_full_name }}</span>
-    </a>
-  </li>
-  {% endfor %}
-  </ul>
+    {% for worker in project.agents.all %}
+    <li>
+        <a href="{{ worker.get_absolute_url }}">
+            <span class="" data-toggle="tooltip" data-placement="top" title="{{ tag.status }}">{{ worker.get_short_name }}</span>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
 {% endblock %}
 
 {% block contents %}
 <div class="row g-5">
     <div class="col-md-8">
-      <h3 class="pb-4 mb-4 border-bottom">
-        From the Firehose
-      </h3>
+        <h2 class="pb-3 mb-3">
+            {{ project.name }}
+            <sup> <span class="{{ project.status_style }}">{{ project.status }}</span>
+            </sup>
+        </h2>
+        <div class="card">
 
-      <article class="blog-post">
-        <h2 class="blog-post-title">Задачи</h2>
-        <p class="blog-post-meta">January 1, 2021 by <a href="#">Mark</a></p>
+            <div class="card-body">
+                <article class="blog-post  border-bottom">
+                    <h3 class="blog-post-title">Описание</h3>
+                    <p>{{ project.description }}</p>
+                </article>
+            </div>
 
-        <p>This blog post shows a few different types of content that’s supported and styled with Bootstrap. Basic typography, lists, tables, images, code, and more are all supported as expected.</p>
-        <hr>
-        <p>This is some additional paragraph placeholder content. It has been written to fill the available space and show how a longer snippet of text affects the surrounding content. We'll repeat it often to keep the demonstration flowing, so be on the lookout for this exact same string of text.</p>
-      </article>
+            <div class="card-body">
+                <article class="blog-post  ">
+                    <h3 class="blog-post-title">Задачи</h3>
+                    <p>{{ project.tasks }}</p>
+                </article>
+            </div>
+            <!--      <hr>-->
+            <div class="card-footer">
+                <a class="btn  btn-outline-success btn-sm " href="{% url 'project_update' project.url %}"
+                   role="button">Изменить</a>
+            </div>
+        </div>
+        {% if history %}
+        <article class="blog-post">
 
-      <article class="blog-post">
-        <h2 class="blog-post-title">История</h2>
-        <p class="blog-post-meta">December 23, 2020 by <a href="#">Jacob</a></p>
+            <div class="row justify-content-end">
+                <div class="col-8">
+                    <h3 class="blog-post-title mt-4 mb-3">История проекта:</h3>
+                </div>
+                <div class="col-4">
+                    <a class="btn  btn-outline-danger btn-sm mt-4 mb-3" href="{% url 'project_update' project.url %}"
+                       role="button">Добавить</a>
+                </div>
 
-        <p>This is some additional paragraph placeholder content. It has been written to fill the available space and show how a longer snippet of text affects the surrounding content. We'll repeat it often to keep the demonstration flowing, so be on the lookout for this exact same string of text.</p>
-        <blockquote>
-          <p>Longer quote goes here, maybe with some <strong>emphasized text</strong> in the middle of it.</p>
-        </blockquote>
+            </div>
 
-        <p>This is some additional paragraph placeholder content. It's a slightly shorter version of the other highly repetitive body text used throughout.</p>
-      </article>
 
+            {% for post in history %}
+            <a href="{{ post.user_add.get_absolute_url }}"><span class="{{ post.user_add.user_location.loc_class }}">{{ post.user_add.get_short_name }} </span></a>
+            ({{ post.pub_date }})
+            <p>{{ post.description }}</p>
+            {% endfor %}
+
+        </article>
+        {% endif %}
+        <nav class="blog-pagination" aria-label="Pagination">
+            {% if is_paginated %}
+            <nav aria-label="...">
+                <ul class="pagination">
+
+                    <li class="page-item {% if prev_url == '' %}disabled{% endif %}">
+                        <a class="page-link" href="{{ prev_url }}"><<</a>
+                    </li>
+
+                    {% for n in history.paginator.page_range %}
+
+                    {% if history.number == n %}
+                    <li class="page-item active" aria-current="page">
+                        <a class="page-link" href="?page={{ n }}">{{n}} <span class="sr-only"></span></a>
+                    </li>
+                    {% elif n > history.number|add:-3 and n < history.number|add:3 %}
+                    <li class="page-item" aria-current="page">
+                        <a class="page-link" href="?page={{ n }}">{{n}}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if next_url == '' %} disabled {% endif %}">
+                        <a class="page-link" href="{{ next_url }}">>></a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+        </nav>
     </div>
 
     <div class="col-md-4">
-      <div class="position-sticky" style="top: 2rem;">
-        <div class="p-4 mb-3 bg-light rounded">
-          <h4 class="fst-italic">Сотрудники на объекте</h4>
-          <p class="mb-0">Customize this section to tell your visitors a little bit about your publication, writers, content, or something else entirely. Totally up to you.</p>
-        </div>
+        <div class="position-sticky" style="top: 2rem;">
+            <div class="p-4 mb-3 bg-light rounded">
+                <h4 class="fst">Сотрудники на объекте:</h4>
+                <ol class="list-unstyled mb-0">
+                    {% if current_staff %}
+                    {% for worker in current_staff %}
+                    <li>
+                        <a href="{{ worker.get_absolute_url }}">
+                            <span class="{{ worker.user_location.loc_class }}" data-toggle="tooltip"
+                                  data-placement="top">{{ worker.get_short_name }}</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                    {% else %}
+                    <li>
+                        <dt>отсутствуют</dt>
+                    </li>
+                    {% endif %}
+                </ol>
+            </div>
 
-        <div class="p-4">
-          <h4 class="fst-italic">История посещений</h4>
-          <ol class="list-unstyled mb-0">
-            <li><a href="#">March 2021</a></li>
-            <li><a href="#">February 2021</a></li>
-          </ol>
+            <div class="">
+                <h4 class="mt-4">История посещений:</h4>
+                <ol class="list-unstyled mb-0">
+                    {% if staff %}
+                    {% for worker in staff %}
+                    <li>
+                        <a href="{{ worker.user_name.get_absolute_url }}">
+                            <span class="{{ worker.user_name.user_location.loc_class }}" data-toggle="tooltip"
+                                  data-placement="top" title="">{{ worker.user_name.get_short_name }}</span>
+                        </a> ({{ worker.date_format }})
+                    </li>
+                    {% endfor %}
+                    {% else %}
+                    <dt>отсутствует</dt>
+                    {% endif %}
+                    <nav class="blog-pagination" aria-label="Pagination">
+                        {% if s_is_paginated %}
+                        <nav aria-label="...">
+                            <ul class="pagination">
+
+                                <li class="page-item {% if s_prev_url == '' %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ s_prev_url }}"><<</a>
+                                </li>
+
+                                {% for n in staff.paginator.page_range %}
+
+                                {% if staff.number == n %}
+                                <li class="page-item active" aria-current="page">
+                                    <a class="page-link" href="?page={{ n }}">{{n}} <span class="sr-only"></span></a>
+                                </li>
+                                {% elif n > staff.number|add:-3 and n < staff.number|add:3 %}
+                                <li class="page-item" aria-current="page">
+                                    <a class="page-link" href="?page={{ n }}">{{n}}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                                <li class="page-item {% if s_next_url == '' %} disabled {% endif %}">
+                                    <a class="page-link" href="{{ s_next_url }}">>></a>
+                                </li>
+                            </ul>
+                        </nav>
+                        {% endif %}
+
+
+                </ol>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>
 </div>
 
 {% endblock %}

@@ -1,12 +1,12 @@
 {% extends 'index.html' %}
 {% load crispy_forms_tags %}
 {% block title %}
-{{ agentproject.last_name }} {{ form.first_name }}
+{{ project.name }}
 {% endblock %}
 
 
 {% block contents %}
-<h5 class="blog-post-title mb-3">{{ agentproject.last_name }} {{ agentproject.first_name }} {{ agentproject.father_name }}</h5>
+<h5 class="blog-post-title mb-3">{{ project.name }}</h5>
 
 <form method="post">
     {% csrf_token %}

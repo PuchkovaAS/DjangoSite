@@ -2,13 +2,14 @@ import operator
 from datetime import datetime, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.defaulttags import register
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, ListView, View
 
-from .forms import UserLocAddForm, AgentEditForm
+from .forms import UserLocAddForm, AgentEditForm, ProjectEditForm
 from .models import Profile, UserLocation, UserStatistic, Project, AgentProject
 from .my_data import PersonData
 from .utils import ObjectUpdateMixin
@@ -86,7 +87,8 @@ class UsersView(LoginRequiredMixin, View):
         context['filter_id'] = list(range(1, len(context['location']) + 1))
         context['user_location'] = []
         for user in context['profile_list']:
-            context['user_location'].append(UserStatistic.objects.filter(user_name=user).order_by('-pub_date')[:1][0])
+            new_obj = UserStatistic.objects.filter(user_name=user)[:1][0]
+            context['user_location'].append(new_obj)
         context['profile_list'] = zip(context['profile_list'], context['user_location'])
         return context
 
@@ -217,7 +219,7 @@ class UserDetailView(LoginRequiredMixin, View):
         context = {}
         object = get_object_or_404(self.model, url__iexact=slug)
         context['profile'] = get_object_or_404(self.model, url__iexact=slug)
-        context['statistics'] = UserStatistic.objects.filter(user_name=object).order_by('-pub_date')[:self.pagination]
+        context['statistics'] = UserStatistic.objects.filter(user_name=object)[:self.pagination]
         context['location'] = context['statistics'][0]
         if context['statistics']:
             context['statistic'] = context['statistics'][0]
@@ -236,7 +238,7 @@ class UserLocationAdd(LoginRequiredMixin, View):
     model = UserStatistic
     template = 'user/user_edit.html'
     success_url = reverse_lazy('user_list')
-    fields = ['user_location', 'description', 'pub_date']
+    fields = ['user_location', 'project', 'description', 'pub_date']
 
     def get(self, request, slug):
         profile = Profile.objects.get(url=slug)
@@ -253,7 +255,9 @@ class UserLocationAdd(LoginRequiredMixin, View):
                                                    user_location=UserLocation.objects.get(
                                                        pk=int(request.POST['user_location'])),
                                                    description=request.POST['description'],
-                                                   pub_date=request.POST['pub_date'])
+                                                   pub_date=request.POST['pub_date'],
+                                                   project=Project.objects.get(pk=int(request.POST['project'])) if
+                                                   request.POST['project'] else None)
             new_obj.save()
             # profile.user_location = UserStatistic.objects.filter(user_name=profile).order_by('-pub_date')[:1][0]
             # profile.save()
@@ -323,21 +327,69 @@ class ProjectDetailView(LoginRequiredMixin, View):
     template_name = "project/project_detail.html"
     pagination = 10
 
+    def get_pagination(self, model, request, page_name, count_pagination=3):
+        history_all = model.all()
+        paginator = Paginator(history_all, count_pagination)
+        # http://127.0.0.1:8000/blog/?page=2
+        page_number = request.GET.get(page_name, 1)
+
+        result_data = paginator.get_page(page_number)
+
+        is_paginated = result_data.has_other_pages()
+        if result_data.has_previous():
+            prev_url = f'?page_name={result_data.previous_page_number()}'
+        else:
+            prev_url = ''
+
+        if result_data.has_next():
+            next_url = f'?page={result_data.next_page_number()}'
+        else:
+            next_url = ''
+        return result_data, is_paginated, prev_url, next_url
+
+    def get_current_staff(self, object):
+        result_staff = []
+        all_staff = Profile.objects.all()
+        for staff in all_staff:
+            current_obj = UserStatistic.objects.filter(user_name=staff)[:1][0]
+            if current_obj.project == object:
+                result_staff.append(staff)
+        return result_staff
+
     def post(self, request, slug):
         self.pagination = int(request.POST.get('pagination'))
         contex = self.get_context_data(slug)
         return render(request, self.template_name, contex)
 
     def get(self, request, slug):
-        contex = self.get_context_data(slug)
+        contex = self.get_context_data(request, slug)
 
         return render(request, self.template_name, contex)
 
-    def get_context_data(self, slug):
-        context = {}
+    def get_context_data(self, request, slug):
         object = get_object_or_404(self.model, url__iexact=slug)
-        context['project'] = object
+
         # context['staff'] = get_object_or_404(AgentProject, location=object.id)
+
+        history, h_is_paginated, h_prev_url, h_next_url = self.get_pagination(model=object.history, request=request,
+                                                                              page_name='page', count_pagination=3)
+        staff_history, s_is_paginated, s_prev_url, s_next_url = self.get_pagination(model=object.user, request=request,
+                                                                                    page_name='page',
+                                                                                    count_pagination=20)
+        current_staff = self.get_current_staff(object)
+
+        context = {'history': history,
+                   'prev_url': h_prev_url,
+                   'next_url': h_next_url,
+                   'is_paginated': h_is_paginated,
+                   'staff': staff_history,
+                   's_prev_url': s_prev_url,
+                   's_next_url': s_next_url,
+                   's_is_paginated': s_is_paginated,
+                   'project': object,
+                   'current_staff': current_staff,
+                   }
+
         return context
 
 
@@ -443,3 +495,12 @@ class AgentEditView(LoginRequiredMixin, ObjectUpdateMixin, View):
     #         'form': bound_form,
     #         self.model.__name__.lower(): object,
     #     })
+
+
+class ProjectEditView(LoginRequiredMixin, ObjectUpdateMixin, View):
+    form_model = ProjectEditForm
+    login_url = '/accounts/login'
+    model = Project
+    template = 'project/project_edit.html'
+    success_url = reverse_lazy('project')
+    fields = ['status','description', 'tasks']

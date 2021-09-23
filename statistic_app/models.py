@@ -54,6 +54,12 @@ class Profile(models.Model):
         # критерии сортировки
         ordering = ['-user.username']
 
+    def get_full_name(self):
+        return f"{self.user.last_name} {self.user.first_name} {self.father_name}"
+
+    def get_short_name(self):
+        return f"{self.user.last_name} {self.user.first_name[0]}. {self.father_name[0]}."
+
     # def save(self, *args, **kwargs):
     #     self.pub_date = timezone.now().date()
     #     return super(Profile, self).save(*args, **kwargs)
@@ -86,36 +92,6 @@ class Profile(models.Model):
     class Meta:
         verbose_name = "Сотрудник"
         verbose_name_plural = "Сотрудники"
-
-
-class UserStatistic(models.Model):
-    user_name = models.ForeignKey(Profile, verbose_name="Пользователь", on_delete=models.SET_NULL, null=True)
-    user_location = models.ForeignKey(UserLocation, verbose_name="Местоположение пользователя",
-                                      on_delete=models.SET_NULL, null=True)
-    description = models.TextField("Описание события", null=True, blank=True)
-    pub_date = models.DateField('Время события', default=datetime.date.today, blank=False, null=False)
-
-    def __str__(self):
-
-        return f"{self.user_name.user.last_name} {self.user_name.user.first_name} {self.user_name.father_name} - {self.user_location}"
-
-    class Meta:
-        verbose_name = "Статистика пользователя"
-        verbose_name_plural = "Статистика пользователей"
-
-    def when_add(self):
-        now = timezone.now().date()
-
-        diff = now - self.pub_date
-
-        if diff.days == 0:
-            return "Сегодня"
-        if diff.days == 1:
-            return "1 день назад"
-        if diff.days < 5:
-            return f"{diff.days} дня назад"
-
-        return f"{diff.days} дней назад"
 
 
 class Project(models.Model):
@@ -171,6 +147,42 @@ class Project(models.Model):
         verbose_name_plural = "Проекты"
 
 
+class UserStatistic(models.Model):
+    user_name = models.ForeignKey(Profile, verbose_name="Пользователь", on_delete=models.SET_NULL, null=True)
+    user_location = models.ForeignKey(UserLocation, verbose_name="Местоположение пользователя",
+                                      on_delete=models.SET_NULL, null=True)
+    description = models.TextField("Описание события", null=True, blank=True)
+    pub_date = models.DateField('Время события', default=datetime.date.today, blank=False, null=False)
+    project = models.ForeignKey(Project, verbose_name="Проект",
+                                on_delete=models.SET_NULL, blank=True, null=True, related_name='user')
+
+    def __str__(self):
+
+        return f"{self.user_name.user.last_name} {self.user_name.user.first_name} {self.user_name.father_name} - {self.user_location}"
+
+    class Meta:
+        verbose_name = "Статистика пользователя"
+        verbose_name_plural = "Статистика пользователей"
+        ordering = ['-pub_date', '-id']
+
+    def date_format(self):
+        return f"{self.pub_date.strftime('%d-%m-%Y')}"
+
+    def when_add(self):
+        now = timezone.now().date()
+
+        diff = now - self.pub_date
+
+        if diff.days == 0:
+            return "Сегодня"
+        if diff.days == 1:
+            return "1 день назад"
+        if diff.days < 5:
+            return f"{diff.days} дня назад"
+
+        return f"{diff.days} дней назад"
+
+
 class AgentProject(models.Model):
     first_name = models.CharField("Имя", max_length=200, blank=False, null=False)
     last_name = models.CharField("Фамилия", max_length=200, blank=False, null=False)
@@ -188,10 +200,15 @@ class AgentProject(models.Model):
 
     class Meta:
         # критерии сортировки
+        verbose_name = "История проекта"
+        verbose_name_plural = "Истории проекта"
         ordering = ['-second_name', '-first_name', '-father_name']
 
     def get_full_name(self):
-        return f"{ self.last_name } { self.first_name } { self.father_name }"
+        return f"{self.last_name} {self.first_name} {self.father_name}"
+
+    def get_short_name(self):
+        return f"{self.last_name} {self.first_name[0]}. {self.father_name[0]}."
 
     def get_absolute_url(self):
         """генерирует ссылку вместо {% url 'post_detail_url' slug=post.slug%}"""
@@ -211,9 +228,11 @@ class AgentProject(models.Model):
 
 
 class HistoryProject(models.Model):
-    project = models.ForeignKey(Project, verbose_name="Проект", on_delete=models.SET_NULL, null=True)
+    project = models.ForeignKey(Project, verbose_name="Проект", on_delete=models.SET_NULL, null=True,
+                                related_name='history')
     pub_date = models.DateField('Время события', default=datetime.date.today, blank=False, null=False)
-
+    user_add = models.ForeignKey(Profile, verbose_name="Сотрудник", on_delete=models.SET_NULL, null=True,
+                                 related_name='users')
     description = models.TextField("Описание", null=True, blank=True)
 
     def __str__(self):
@@ -222,6 +241,7 @@ class HistoryProject(models.Model):
     class Meta:
         verbose_name = "История проекта"
         verbose_name_plural = "Истории проекта"
+        ordering = ['-pub_date', '-id']
 
     def when_add(self):
         now = timezone.now().date()

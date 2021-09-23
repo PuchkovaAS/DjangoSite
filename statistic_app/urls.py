@@ -17,7 +17,7 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from .views import UsersView, UserDetailView, UsersFilterView, UserStatistics, UserLocationAdd, ProjectsView, AgentView, \
-    AgentDetailView, AgentEditView, ProjectDetailView
+    AgentDetailView, AgentEditView, ProjectDetailView, ProjectEditView
 
 urlpatterns = [
     path('', RedirectView.as_view(url="/user/"), name='main_view'),
@@ -26,8 +26,10 @@ urlpatterns = [
     path('user/', UsersView.as_view(), name='user_list'),
     path('user/<str:slug>/', UserDetailView.as_view(), name='user_detail'),
     path('user/<str:slug>/update/', UserLocationAdd.as_view(), name='user_update'),
+    path('user/<str:slug>/edit/', UserEditView.as_view(), name='user_edit'),
     path('project/', ProjectsView.as_view(), name='project_list'),
     path('project/<str:slug>/', ProjectDetailView.as_view(), name='project_detail'),
+    path('project/<str:slug>/update/', ProjectEditView.as_view(), name='project_update'),
     path('agent/', AgentView.as_view(), name='agent_list'),
     path('agent/<str:slug>/', AgentDetailView.as_view(), name='agent_detail'),
     path('agent/<str:slug>/update/', AgentEditView.as_view(), name='agent_update'),
