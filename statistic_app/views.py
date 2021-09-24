@@ -252,10 +252,12 @@ class UserLocationAdd(LoginRequiredMixin, View):
                                                    request.POST['project'] else None)
             new_obj.save()
 
-            profile.user_location = new_obj.user_location
-            profile.project = new_obj.project
-            profile.pub_date = new_obj.pub_date
-            profile.description = new_obj.description
+
+            last_statis = UserStatistic.objects.filter(user_name=profile)[0]
+            profile.user_location = last_statis.user_location
+            profile.project = last_statis.project
+            profile.pub_date = last_statis.pub_date
+            profile.description = last_statis.description
             profile.save()
 
             # profile.user_location = UserStatistic.objects.filter(user_name=profile).order_by('-pub_date')[:1][0]
