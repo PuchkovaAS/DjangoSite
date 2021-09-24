@@ -46,7 +46,7 @@
                    role="button">Изменить</a>
             </div>
         </div>
-        {% if history %}
+
         <article class="blog-post">
 
             <div class="row justify-content-end">
@@ -54,7 +54,7 @@
                     <h3 class="blog-post-title mt-4 mb-3">История проекта:</h3>
                 </div>
                 <div class="col-4">
-                    <a class="btn  btn-outline-danger btn-sm mt-4 mb-3" href="{% url 'project_update' project.url %}"
+                    <a class="btn  btn-outline-danger btn-sm mt-4 mb-3" href="{% url 'project_add' project.url %}"
                        role="button">Добавить</a>
                 </div>
 
@@ -62,13 +62,13 @@
 
 
             {% for post in history %}
-            <a href="{{ post.user_add.get_absolute_url }}"><span class="{{ post.user_add.user_location.loc_class }}">{{ post.user_add.get_short_name }} </span></a>
+            <a href="{{ post.user_add.get_absolute_url }}"><span class="{{ post.user_add.user_location.loc_class }}" title="{{ post.user_add.user_location.location }}">{{ post.user_add.get_short_name }} </span></a>
             ({{ post.pub_date }})
             <p>{{ post.description }}</p>
             {% endfor %}
 
         </article>
-        {% endif %}
+
         <nav class="blog-pagination" aria-label="Pagination">
             {% if is_paginated %}
             <nav aria-label="...">
@@ -109,7 +109,7 @@
                     <li>
                         <a href="{{ worker.get_absolute_url }}">
                             <span class="{{ worker.user_location.loc_class }}" data-toggle="tooltip"
-                                  data-placement="top">{{ worker.get_short_name }}</span>
+                                  data-placement="top" title="{{ worker.user_location.location }}">{{ worker.get_short_name }}</span>
                         </a>
                     </li>
                     {% endfor %}
@@ -129,7 +129,7 @@
                     <li>
                         <a href="{{ worker.user_name.get_absolute_url }}">
                             <span class="{{ worker.user_name.user_location.loc_class }}" data-toggle="tooltip"
-                                  data-placement="top" title="">{{ worker.user_name.get_short_name }}</span>
+                                  data-placement="top" title="{{ worker.user_name.user_location.location }}">{{ worker.user_name.get_short_name }}</span>
                         </a> ({{ worker.date_format }})
                     </li>
                     {% endfor %}

@@ -37,63 +37,6 @@ class UserLocation(models.Model):
         verbose_name_plural = "Местоположения"
 
 
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, verbose_name="Пользователь")
-    father_name = models.CharField("Отчество", max_length=200, blank=True, null=True)
-    tabel_num = models.IntegerField(verbose_name="Табельный номер", default=0)
-    position = models.CharField("Должность", max_length=200)
-    user_location = models.ForeignKey(UserLocation, verbose_name="Местоположение пользователя",
-                                      on_delete=models.SET_NULL, null=True)
-    url = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL", default=None, null=True,
-                           blank=True)
-    phone_number = models.CharField(max_length=12, blank=True, null=True)
-
-    # description = models.TextField("Описание события", null=True, blank=True)
-
-    class Meta:
-        # критерии сортировки
-        ordering = ['-user.username']
-
-    def get_full_name(self):
-        return f"{self.user.last_name} {self.user.first_name} {self.father_name}"
-
-    def get_short_name(self):
-        return f"{self.user.last_name} {self.user.first_name[0]}. {self.father_name[0]}."
-
-    # def save(self, *args, **kwargs):
-    #     self.pub_date = timezone.now().date()
-    #     return super(Profile, self).save(*args, **kwargs)
-
-    # def whenpublished(self):
-    #     now = timezone.now().date()
-    # 
-    #     diff = now - self.pub_date
-    # 
-    #     if diff.days == 0:
-    #         return "Сегодня"
-    #     if diff.days == 1:
-    #         return "1 день назад"
-    #     if diff.days < 5:
-    #         return f"{diff.days} дня назад"
-    # 
-    #     return f"{diff.days} дней назад"
-
-    def get_absolute_url(self):
-        """генерирует ссылку вместо {% url 'post_detail_url' slug=post.slug%}"""
-        return reverse('user_detail', kwargs={'slug': self.url})
-
-    def __str__(self):
-        return f"{self.user.last_name} {self.user.first_name} {self.father_name}"
-
-    def save(self, *args, **kwargs):
-        self.url = slugify(str(self.user.username).lower() + str(self.tabel_num))
-        super(Profile, self).save()
-
-    class Meta:
-        verbose_name = "Сотрудник"
-        verbose_name_plural = "Сотрудники"
-
-
 class Project(models.Model):
     STATUS_PROJECT = [
         ('Не начат', 'Не начат'),
@@ -147,6 +90,68 @@ class Project(models.Model):
         verbose_name_plural = "Проекты"
 
 
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, verbose_name="Пользователь")
+    father_name = models.CharField("Отчество", max_length=200, blank=True, null=True)
+    tabel_num = models.IntegerField(verbose_name="Табельный номер", default=0)
+    position = models.CharField("Должность", max_length=200)
+    user_location = models.ForeignKey(UserLocation, verbose_name="Местоположение пользователя",
+                                      on_delete=models.SET_NULL, null=True)
+    url = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL", default=None, null=True,
+                           blank=True)
+    phone_number = models.CharField(verbose_name="Телефон(ы)", max_length=200, blank=True, null=True)
+
+    project = models.ForeignKey(Project, verbose_name="Проект",
+                                          on_delete=models.SET_NULL, blank=True, null=True, related_name='project')
+    description = models.TextField("Описание события", null=True, blank=True)
+    pub_date = models.DateField('Время события', default=datetime.date.today, blank=False, null=False)
+
+    # description = models.TextField("Описание события", null=True, blank=True)
+
+    class Meta:
+        # критерии сортировки
+        ordering = ['-user.username']
+
+    def get_full_name(self):
+        return f"{self.user.last_name} {self.user.first_name} {self.father_name}"
+
+    def get_short_name(self):
+        return f"{self.user.last_name} {self.user.first_name[0]}. {self.father_name[0]}."
+
+    # def save(self, *args, **kwargs):
+    #     self.pub_date = timezone.now().date()
+    #     return super(Profile, self).save(*args, **kwargs)
+
+    def when_published(self):
+        now = timezone.now().date()
+
+        diff = now - self.pub_date
+
+        if diff.days == 0:
+            return "Сегодня"
+        if diff.days == 1:
+            return "1 день назад"
+        if diff.days < 5:
+            return f"{diff.days} дня назад"
+
+        return f"{diff.days} дней назад"
+
+    def get_absolute_url(self):
+        """генерирует ссылку вместо {% url 'post_detail_url' slug=post.slug%}"""
+        return reverse('user_detail', kwargs={'slug': self.url})
+
+    def __str__(self):
+        return f"{self.user.last_name} {self.user.first_name} {self.father_name}"
+
+    def save(self, *args, **kwargs):
+        self.url = slugify(str(self.user.username).lower() + str(self.tabel_num))
+        super(Profile, self).save()
+
+    class Meta:
+        verbose_name = "Сотрудник"
+        verbose_name_plural = "Сотрудники"
+
+
 class UserStatistic(models.Model):
     user_name = models.ForeignKey(Profile, verbose_name="Пользователь", on_delete=models.SET_NULL, null=True)
     user_location = models.ForeignKey(UserLocation, verbose_name="Местоположение пользователя",
@@ -194,6 +199,7 @@ class AgentProject(models.Model):
     # related_name для связи many to many чтобы найти по тегу все посты
     phone_number = models.CharField(verbose_name='Телефон', max_length=200, blank=True, null=True)
     email = models.EmailField(verbose_name='Почта', blank=True, null=True)
+    organisation = models.CharField(verbose_name="Организация", null=True, blank=True, max_length=200)
 
     url = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL", default=None, null=True,
                            blank=True)

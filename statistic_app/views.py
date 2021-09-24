@@ -9,8 +9,8 @@ from django.template.defaulttags import register
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, ListView, View
 
-from .forms import UserLocAddForm, AgentEditForm, ProjectEditForm
-from .models import Profile, UserLocation, UserStatistic, Project, AgentProject
+from .forms import UserLocAddForm, AgentEditForm, ProjectEditForm, UserEditForm, HistoryAddForm
+from .models import Profile, UserLocation, UserStatistic, Project, AgentProject, HistoryProject
 from .my_data import PersonData
 from .utils import ObjectUpdateMixin
 
@@ -84,12 +84,6 @@ class UsersView(LoginRequiredMixin, View):
         context = {}
         context['profile_list'] = self.get_queryset()
         context['location'] = UserLocation.objects.all()
-        context['filter_id'] = list(range(1, len(context['location']) + 1))
-        context['user_location'] = []
-        for user in context['profile_list']:
-            new_obj = UserStatistic.objects.filter(user_name=user)[:1][0]
-            context['user_location'].append(new_obj)
-        context['profile_list'] = zip(context['profile_list'], context['user_location'])
         return context
 
 
@@ -220,9 +214,6 @@ class UserDetailView(LoginRequiredMixin, View):
         object = get_object_or_404(self.model, url__iexact=slug)
         context['profile'] = get_object_or_404(self.model, url__iexact=slug)
         context['statistics'] = UserStatistic.objects.filter(user_name=object)[:self.pagination]
-        context['location'] = context['statistics'][0]
-        if context['statistics']:
-            context['statistic'] = context['statistics'][0]
         context['pagination'] = self.pagination
         return context
 
@@ -236,7 +227,7 @@ class UserLocationAdd(LoginRequiredMixin, View):
     form_model = UserLocAddForm
     login_url = '/accounts/login'
     model = UserStatistic
-    template = 'user/user_edit.html'
+    template = 'user/user_add.html'
     success_url = reverse_lazy('user_list')
     fields = ['user_location', 'project', 'description', 'pub_date']
 
@@ -251,14 +242,22 @@ class UserLocationAdd(LoginRequiredMixin, View):
         if bound_form.is_valid():
             profile = Profile.objects.get(url=slug)
             request.POST = request.POST.copy()
+            location = UserLocation.objects.get(
+                pk=int(request.POST['user_location']))
             new_obj = UserStatistic.objects.create(user_name=profile,
-                                                   user_location=UserLocation.objects.get(
-                                                       pk=int(request.POST['user_location'])),
+                                                   user_location=location,
                                                    description=request.POST['description'],
                                                    pub_date=request.POST['pub_date'],
                                                    project=Project.objects.get(pk=int(request.POST['project'])) if
                                                    request.POST['project'] else None)
             new_obj.save()
+
+            profile.user_location = new_obj.user_location
+            profile.project = new_obj.project
+            profile.pub_date = new_obj.pub_date
+            profile.description = new_obj.description
+            profile.save()
+
             # profile.user_location = UserStatistic.objects.filter(user_name=profile).order_by('-pub_date')[:1][0]
             # profile.save()
             return redirect(self.success_url)
@@ -376,6 +375,7 @@ class ProjectDetailView(LoginRequiredMixin, View):
         staff_history, s_is_paginated, s_prev_url, s_next_url = self.get_pagination(model=object.user, request=request,
                                                                                     page_name='page',
                                                                                     count_pagination=20)
+
         current_staff = self.get_current_staff(object)
 
         context = {'history': history,
@@ -463,7 +463,7 @@ class AgentEditView(LoginRequiredMixin, ObjectUpdateMixin, View):
     model = AgentProject
     template = 'agent/agent_edit.html'
     success_url = reverse_lazy('agent_list')
-    fields = ['position', 'description', 'location', 'phone_number', 'email']
+    fields = ['position', 'organisation','description', 'location', 'phone_number', 'email']
 
     # def get(self, request, slug):
     #     object = self.model.objects.get(slug__iexact=slug)
@@ -497,10 +497,58 @@ class AgentEditView(LoginRequiredMixin, ObjectUpdateMixin, View):
     #     })
 
 
+class UserEditView(LoginRequiredMixin, ObjectUpdateMixin, View):
+    form_model = UserEditForm
+    login_url = '/accounts/login'
+    model = Profile
+    template = 'user/user_edit.html'
+    success_url = reverse_lazy('user')
+    fields = ['tabel_num', 'position', 'phone_number']
+
+
 class ProjectEditView(LoginRequiredMixin, ObjectUpdateMixin, View):
     form_model = ProjectEditForm
     login_url = '/accounts/login'
     model = Project
     template = 'project/project_edit.html'
     success_url = reverse_lazy('project')
-    fields = ['status','description', 'tasks']
+    fields = ['status', 'description', 'tasks']
+
+
+class HistoryAddView(LoginRequiredMixin, View):
+    form_model = HistoryAddForm
+    login_url = '/accounts/login'
+    model = HistoryProject
+    model_parent = Project
+    template = 'project/project_add.html'
+    success_url = reverse_lazy('project_list')
+    fields = ['user_add', 'description', 'pub_date']
+
+    def get(self, request, slug):
+        profile = self.model_parent.objects.get(url=slug)
+        form = self.form_model()
+        return render(request=request, template_name=self.template, context={'form': form, 'project': profile})
+
+    def right_date(self, date):
+        date_formats_in = '%d.%m.%Y'
+        date_formats_out = '%Y-%m-%d'
+        result = datetime.strptime(date, date_formats_in).strftime(date_formats_out)
+        return result
+
+    def post(self, request, slug):
+        # prof_slug = request.build_absolute_uri().split('/')[-3]
+        bound_form = self.form_model(request.POST)
+        if bound_form.is_valid():
+            project = self.model_parent.objects.get(url=slug)
+            request.POST = request.POST.copy()
+            new_obj = self.model.objects.create(project=project,
+                                                pub_date=self.right_date(request.POST['pub_date']),
+                                                user_add=Profile.objects.get(pk=request.POST['user_add']),
+                                                description=request.POST['description'],
+                                                )
+            new_obj.save()
+            # profile.user_location = UserStatistic.objects.filter(user_name=profile).order_by('-pub_date')[:1][0]
+            # profile.save()
+            return redirect(self.success_url)
+        else:
+            return render(request, self.template, context={'form': bound_form})

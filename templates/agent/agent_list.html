@@ -14,6 +14,7 @@
             <tr>
                 <th>#</th>
                 <th>ФИО</th>
+                <th>Организация</th>
                 <th>Должность</th>
                 <th>Телефон</th>
                 <th>Объекты</th>
@@ -25,6 +26,7 @@
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td><a {% if agent.url %} href="{{ agent.get_absolute_url }}" {% endif %}>{{ agent.get_full_name }}</a></td>
+                <td>{{ agent.organisation }}</td>
                 <td>{{ agent.position }}</td>
                 <td>{{ agent.phone_number }}</td>
                 <td>

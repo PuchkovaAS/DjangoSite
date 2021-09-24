@@ -13,8 +13,10 @@
                        <h4>Карточка сотрудника</h4>
                 </div>
                 <div class="col-2">
-                    <a class="btn  btn-outline-danger btn-sm" href=""
+                    {% if user.is_authenticated and user.username == profile.user.username or user.is_superuser %}
+                    <a class="btn  btn-outline-danger btn-sm" href="{% url 'user_edit' profile.url %}"
                        role="button">Изменить</a>
+                    {% endif %}
                 </div>
 
             </div>
@@ -50,10 +52,10 @@
                     <div class="container">
                         <div class="row">
                             <div class="col-sm-3">
-                                <span class="{{ location.user_location.loc_class }}">{{ location.user_location.location }}</span>
+                                <span class="{{ profile.user_location.loc_class }}">{{ profile.user_location.location }}</span>
                             </div>
                             <div class="col-sm-7">
-                                <a href="{{ location.project.get_absolute_url }}"><span class="{{ location.project.status_style }}" title="{{ location.project.status }}">{{ location.project.name }}</span>
+                                <a href="{{ profile.project.get_absolute_url }}"><span class="{{ profile.project.status_style }}" title="{{ profile.project.status }}">{{ profile.project.name }}</span>
                                 </a>
                             </div>
                             <div class="col-sm-2">
@@ -67,10 +69,10 @@
 
                 </td>
             </tr>
-            {% if statistic.description %}
+            {% if profile.description %}
             <tr>
                 <td>Описание</td>
-                <td>{{ statistic.description }}</td>
+                <td>{{ profile.description }}</td>
             </tr>
             {% endif %}
             </tbody>
@@ -78,7 +80,7 @@
 
     </div>
     <div class="card-footer">
-{% if location.when_add %}Изменен: {{ location.when_add }}{% else %} Дата изменения неизвестна
+{% if profile.when_published %}Изменен: {{ profile.when_published }}{% else %} Дата изменения неизвестна
         {% endif %}
 
 

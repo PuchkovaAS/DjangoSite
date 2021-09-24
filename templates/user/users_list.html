@@ -43,14 +43,14 @@
             </tr>
             </thead>
             <tbody>
-            {% for user, location in profile_list %}
+            {% for user in profile_list %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td><a {% if user.url %} href="{{ user.get_absolute_url }}" {% endif %}>{{user.get_full_name }}</a></td>
                 <td>{{ user.tabel_num }}</td>
                 <td>{{ user.position }}</td>
-                <td><span class="{{ location.user_location.loc_class }}">{{ location.user_location.location }}</span></td>
-                <td><a href="{{ location.project.get_absolute_url }}"><span class="{{ location.project.status_style }}" title="{{ location.project.status }}">{{ location.project.name }}</span></a></td>
+                <td><span class="{{ user.user_location.loc_class }}">{{ user.user_location.location }}</span></td>
+                <td><a href="{{ user.project.get_absolute_url }}"><span class="{{ user.project.status_style }}" title="{{ user.project.status }}">{{ user.project.name }}</span></a></td>
             </tr>
             {% endfor %}
             </tbody>
