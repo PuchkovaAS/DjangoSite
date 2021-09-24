@@ -252,7 +252,6 @@ class UserLocationAdd(LoginRequiredMixin, View):
                                                    request.POST['project'] else None)
             new_obj.save()
 
-
             last_statis = UserStatistic.objects.filter(user_name=profile)[0]
             profile.user_location = last_statis.user_location
             profile.project = last_statis.project
@@ -465,7 +464,7 @@ class AgentEditView(LoginRequiredMixin, ObjectUpdateMixin, View):
     model = AgentProject
     template = 'agent/agent_edit.html'
     success_url = reverse_lazy('agent_list')
-    fields = ['position', 'organisation','description', 'location', 'phone_number', 'email']
+    fields = ['position', 'organisation', 'description', 'location', 'phone_number', 'email']
 
     # def get(self, request, slug):
     #     object = self.model.objects.get(slug__iexact=slug)
