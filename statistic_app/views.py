@@ -76,7 +76,8 @@ class UsersView(LoginRequiredMixin, View):
                 position__icontains=self.search_quary))
         else:
             queryset = Profile.objects.all()
-        return queryset
+        ordering = sorted(queryset, key=operator.attrgetter('user.username'))
+        return ordering
 
     def get_context_data(self):
         context = {}
@@ -409,7 +410,7 @@ class ProjectDetailView(LoginRequiredMixin, View):
                    's_is_paginated': s_is_paginated,
                    'project': object,
                    'current_staff': current_staff,
-                   'location':UserLocation.objects.all()
+                   'location': UserLocation.objects.all()
                    }
 
         return context

@@ -108,10 +108,6 @@ class Profile(models.Model):
 
     # description = models.TextField("Описание события", null=True, blank=True)
 
-    class Meta:
-        # критерии сортировки
-        ordering = ['-user.username']
-
     def get_full_name(self):
         return f"{self.user.last_name} {self.user.first_name} {self.father_name}"
 
@@ -150,6 +146,7 @@ class Profile(models.Model):
     class Meta:
         verbose_name = "Сотрудник"
         verbose_name_plural = "Сотрудники"
+        # ordering = ['-user.first_name']
 
 
 class UserStatistic(models.Model):
