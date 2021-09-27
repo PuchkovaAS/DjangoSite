@@ -102,7 +102,7 @@ class Profile(models.Model):
     phone_number = models.CharField(verbose_name="Телефон(ы)", max_length=200, blank=True, null=True)
 
     project = models.ForeignKey(Project, verbose_name="Проект",
-                                          on_delete=models.SET_NULL, blank=True, null=True, related_name='project')
+                                on_delete=models.SET_NULL, blank=True, null=True, related_name='project')
     description = models.TextField("Описание события", null=True, blank=True)
     pub_date = models.DateField('Время события', default=datetime.date.today, blank=False, null=False)
 
@@ -203,9 +203,9 @@ class AgentProject(models.Model):
 
     class Meta:
         # критерии сортировки
-        verbose_name = "История проекта"
-        verbose_name_plural = "Истории проекта"
-        ordering = ['-second_name', '-first_name', '-father_name']
+        verbose_name = "Контрагент"
+        verbose_name_plural = "Контрагенты"
+        ordering = ['-last_name', '-first_name', '-father_name']
 
     def get_full_name(self):
         return f"{self.last_name} {self.first_name} {self.father_name}"
@@ -224,10 +224,6 @@ class AgentProject(models.Model):
         self.url = slugify(
             f"{transliterate(str(self.last_name).lower())}_{transliterate(str(self.first_name).lower())}_{transliterate(str(self.father_name).lower())}_{datetime.datetime.now().microsecond}")
         super(AgentProject, self).save()
-
-    class Meta:
-        verbose_name = "Инагент"
-        verbose_name_plural = "Инагенты"
 
 
 class HistoryProject(models.Model):
