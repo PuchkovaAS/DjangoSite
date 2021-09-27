@@ -9,17 +9,17 @@
 <div class="card">
     <div class="card-header">
         <div class="row justify-content-end">
-                <div class="col-10">
-                       <h4>Карточка сотрудника</h4>
-                </div>
-                <div class="col-2">
-                    {% if user.is_authenticated and user.username == profile.user.username or user.is_superuser %}
-                    <a class="btn  btn-outline-danger btn-sm" href="{% url 'user_edit' profile.url %}"
-                       role="button">Изменить</a>
-                    {% endif %}
-                </div>
-
+            <div class="col-10">
+                <h4>Карточка сотрудника</h4>
             </div>
+            <div class="col-2">
+                {% if user.is_authenticated and user.username == profile.user.username or user.is_superuser %}
+                <a class="btn  btn-outline-danger btn-sm" href="{% url 'user_edit' profile.url %}"
+                   role="button">Изменить</a>
+                {% endif %}
+            </div>
+
+        </div>
     </div>
     <div class="card-body">
 
@@ -55,7 +55,8 @@
                                 <span class="{{ profile.user_location.loc_class }}">{{ profile.user_location.location }}</span>
                             </div>
                             <div class="col-sm-7">
-                                <a href="{{ profile.project.get_absolute_url }}"><span class="{{ profile.project.status_style }}" title="{{ profile.project.status }}">{{ profile.project.name }}</span>
+                                <a href="{{ profile.project.get_absolute_url }}"><span
+                                        class="{{ profile.project.status_style }}" title="{{ profile.project.status }}">{{ profile.project.name }}</span>
                                 </a>
                             </div>
                             <div class="col-sm-2">
@@ -80,7 +81,7 @@
 
     </div>
     <div class="card-footer">
-{% if profile.when_published %}Изменен: {{ profile.when_published }}{% else %} Дата изменения неизвестна
+        {% if profile.when_published %}Изменен: {{ profile.when_published }}{% else %} Дата изменения неизвестна
         {% endif %}
 
 
@@ -98,13 +99,8 @@
                     <h3>История изменений</h3>
                 </div>
                 <div class="col-4">
-                    <table class="table table-striped">
-                        <tbody>
-                        <th scope="col">Кол-во записей</th>
-                        <th scope="col"><form action="" method="post">{% csrf_token %}<input type="number" id="replyNumber" min="1" data-bind="value:replyNumber"
-                                               name="pagination" value="{{ pagination }}"/></form></th>
-                        </tbody>
-                    </table>
+
+                    <h3></h3>
                 </div>
 
             </div>
@@ -114,7 +110,7 @@
         <table class="table table-striped table-sm">
             <thead>
             <tr>
-                <th>#</th>
+
                 <th>Дата добавления</th>
                 <th>Статус</th>
                 <th>Объект</th>
@@ -124,10 +120,12 @@
             <tbody>
             {% for stat in statistics %}
             <tr>
-                <td>{{ forloop.counter }}</td>
+<!--                <td>{{ forloop.counter }}</td>-->
                 <td>{{ stat.pub_date }}</td>
                 <td><span class="{{ stat.user_location.loc_class }}">{{ stat.user_location.location }}</span></td>
-                <td><a href="{{ stat.project.get_absolute_url }}"><span class="{{ stat.project.status_style }}" title="{{ stat.project.status }}">{{ stat.project.name }}</span></a></td>
+                <td><a href="{{ stat.project.get_absolute_url }}"><span class="{{ stat.project.status_style }}"
+                                                                        title="{{ stat.project.status }}">{{ stat.project.name }}</span></a>
+                </td>
                 <td>{{ stat.description }}</td>
             </tr>
             {% endfor %}
@@ -135,4 +133,32 @@
         </table>
     </div>
 </div>
+<nav class="blog-pagination" aria-label="Pagination">
+    {% if is_paginated %}
+    <nav aria-label="...">
+        <ul class="pagination">
+
+            <li class="page-item {% if prev_url == '' %}disabled{% endif %}">
+                <a class="page-link" href="{{ prev_url }}"><<</a>
+            </li>
+
+            {% for n in statistics.paginator.page_range %}
+
+            {% if statistics.number == n %}
+            <li class="page-item active" aria-current="page">
+                <a class="page-link" href="?page={{ n }}">{{n}} <span class="sr-only"></span></a>
+            </li>
+            {% elif n > statistics.number|add:-3 and n < statistics.number|add:3 %}
+            <li class="page-item" aria-current="page">
+                <a class="page-link" href="?page={{ n }}">{{n}}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+            <li class="page-item {% if next_url == '' %} disabled {% endif %}">
+                <a class="page-link" href="{{ next_url }}">>></a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</nav>
 {% endblock %}

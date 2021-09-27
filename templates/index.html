@@ -23,7 +23,7 @@
             aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
-    {% if '/user' in request.get_full_path and profile is defined %}
+    {% if search_line %}
     <form action="" method="post" class="w-100 me-2">
         {% csrf_token %}
         <input class="form-control form-control-dark w-100 me-2" type="search" placeholder="Поиск" aria-label="Поиск"

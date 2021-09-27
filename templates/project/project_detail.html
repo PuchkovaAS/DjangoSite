@@ -5,16 +5,31 @@
 {% endblock %}
 
 {% block filter %}
-<label class="form-label">Инагенты:</label>
-<ul>
-    {% for worker in project.agents.all %}
-    <li>
-        <a href="{{ worker.get_absolute_url }}">
-            <span class="" data-toggle="tooltip" data-placement="top" title="{{ tag.status }}">{{ worker.get_short_name }}</span>
-        </a>
+<ul class="nav flex-column mb-2">
+    <li class="nav-item">
+        <label class="form-label">Местоположение:</label>
+        {% for loc in location %}
+        <div class="">
+            <span class="{{ loc.loc_class }}">{{ loc.location }}</span>
+        </div>
+        {% endfor %}
     </li>
-    {% endfor %}
+    <li class="nav-item mt-4">
+        <label class="form-label">Инагенты:</label>
+        <ul>
+            {% for worker in project.agents.all %}
+            <li>
+                <a href="{{ worker.get_absolute_url }}">
+                    <span class="" data-toggle="tooltip" data-placement="top" title="{{ tag.status }}">{{ worker.get_short_name }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </li>
+
 </ul>
+
+
 {% endblock %}
 
 {% block contents %}
@@ -62,7 +77,8 @@
 
 
             {% for post in history %}
-            <a href="{{ post.user_add.get_absolute_url }}"><span class="{{ post.user_add.user_location.loc_class }}" title="{{ post.user_add.user_location.location }}">{{ post.user_add.get_short_name }} </span></a>
+            <a href="{{ post.user_add.get_absolute_url }}"><span class="{{ post.user_add.user_location.loc_class }}"
+                                                                 title="{{ post.user_add.user_location.location }}">{{ post.user_add.get_short_name }} </span></a>
             ({{ post.pub_date }})
             <p>{{ post.description }}</p>
             {% endfor %}

@@ -76,14 +76,13 @@ class UsersView(LoginRequiredMixin, View):
                 position__icontains=self.search_quary))
         else:
             queryset = Profile.objects.all()
-
-        ordered = sorted(queryset, key=operator.attrgetter('user.username'))
-        return ordered
+        return queryset
 
     def get_context_data(self):
         context = {}
         context['profile_list'] = self.get_queryset()
         context['location'] = UserLocation.objects.all()
+        context['search_line'] = True
         return context
 
 
@@ -199,22 +198,49 @@ class UserDetailView(LoginRequiredMixin, View):
     template_name = "user/user_detail.html"
     pagination = 10
 
+    def get_pagination(self, model, request, page_name, count_pagination=10):
+        history_all = model.all()
+        paginator = Paginator(history_all, count_pagination)
+        page_number = request.GET.get(page_name, 1)
+
+        result_data = paginator.get_page(page_number)
+
+        is_paginated = result_data.has_other_pages()
+        if result_data.has_previous():
+            prev_url = f'?{page_name}={result_data.previous_page_number()}'
+        else:
+            prev_url = ''
+
+        if result_data.has_next():
+            next_url = f'?{page_name}={result_data.next_page_number()}'
+        else:
+            next_url = ''
+        return result_data, is_paginated, prev_url, next_url
+
     def post(self, request, slug):
-        self.pagination = int(request.POST.get('pagination'))
-        contex = self.get_context_data(slug)
+        contex = self.get_context_data(request, slug)
         return render(request, self.template_name, contex)
 
     def get(self, request, slug):
-        contex = self.get_context_data(slug)
+
+        contex = self.get_context_data(request, slug)
 
         return render(request, self.template_name, contex)
 
-    def get_context_data(self, slug):
+    def get_context_data(self, request, slug):
         context = {}
         object = get_object_or_404(self.model, url__iexact=slug)
         context['profile'] = get_object_or_404(self.model, url__iexact=slug)
-        context['statistics'] = UserStatistic.objects.filter(user_name=object)[:self.pagination]
-        context['pagination'] = self.pagination
+        # context['statistics'] = UserStatistic.objects.filter(user_name=object)[:self.pagination]
+        history, h_is_paginated, h_prev_url, h_next_url = self.get_pagination(
+            model=UserStatistic.objects.filter(user_name=object), request=request,
+            page_name='page', count_pagination=10)
+
+        context['statistics'] = history
+        context['prev_url'] = h_prev_url
+        context['next_url'] = h_next_url
+        context['is_paginated'] = h_is_paginated
+
         return context
 
     # View
@@ -287,7 +313,7 @@ class UserLocationAdd(LoginRequiredMixin, View):
 #         return super(UserLocationAdd, self).post(request, **kwargs)
 class ProjectsView(LoginRequiredMixin, View):
     login_url = '/accounts/login'
-    model = Profile
+    model = Project
     template_name = "project/project_list.html"
     paginate_by = 60
     search_quary = ''
@@ -302,21 +328,16 @@ class ProjectsView(LoginRequiredMixin, View):
         return render(request, self.template_name, contex)
 
     def get_queryset(self):
-        # if self.search_quary:
-        #     queryset = Project.objects.filter(Q(user__last_name__icontains=self.search_quary) |
-        #                                       Q(user__first_name__icontains=self.search_quary) |
-        #                                       Q(father_name__icontains=self.search_quary) | Q(
-        #         position__icontains=self.search_quary))
-        # else:
-        queryset = Project.objects.all()
-
-        ordered = sorted(queryset, key=operator.attrgetter('name'))
-        return ordered
+        if self.search_quary:
+            queryset = self.model.objects.filter(Q(name__icontains=self.search_quary))
+        else:
+            queryset = self.model.objects.all()
+        return queryset
 
     def get_context_data(self):
         context = {}
         context['project_list'] = self.get_queryset()
-
+        context['search_line'] = True
         return context
 
 
@@ -337,12 +358,12 @@ class ProjectDetailView(LoginRequiredMixin, View):
 
         is_paginated = result_data.has_other_pages()
         if result_data.has_previous():
-            prev_url = f'?page_name={result_data.previous_page_number()}'
+            prev_url = f'?{page_name}={result_data.previous_page_number()}'
         else:
             prev_url = ''
 
         if result_data.has_next():
-            next_url = f'?page={result_data.next_page_number()}'
+            next_url = f'?{page_name}={result_data.next_page_number()}'
         else:
             next_url = ''
         return result_data, is_paginated, prev_url, next_url
@@ -372,13 +393,12 @@ class ProjectDetailView(LoginRequiredMixin, View):
         # context['staff'] = get_object_or_404(AgentProject, location=object.id)
 
         history, h_is_paginated, h_prev_url, h_next_url = self.get_pagination(model=object.history, request=request,
-                                                                              page_name='page', count_pagination=3)
+                                                                              page_name='page', count_pagination=10)
         staff_history, s_is_paginated, s_prev_url, s_next_url = self.get_pagination(model=object.user, request=request,
                                                                                     page_name='page',
                                                                                     count_pagination=20)
 
         current_staff = self.get_current_staff(object)
-
         context = {'history': history,
                    'prev_url': h_prev_url,
                    'next_url': h_next_url,
@@ -389,6 +409,7 @@ class ProjectDetailView(LoginRequiredMixin, View):
                    's_is_paginated': s_is_paginated,
                    'project': object,
                    'current_staff': current_staff,
+                   'location':UserLocation.objects.all()
                    }
 
         return context
@@ -411,21 +432,20 @@ class AgentView(LoginRequiredMixin, View):
         return render(request, self.template_name, contex)
 
     def get_queryset(self):
-        # if self.search_quary:
-        #     queryset = Project.objects.filter(Q(user__last_name__icontains=self.search_quary) |
-        #                                       Q(user__first_name__icontains=self.search_quary) |
-        #                                       Q(father_name__icontains=self.search_quary) | Q(
-        #         position__icontains=self.search_quary))
-        # else:
-        queryset = AgentProject.objects.all()
-
-        ordered = sorted(queryset, key=operator.attrgetter('last_name'))
-        return ordered
+        if self.search_quary:
+            queryset = AgentProject.objects.filter(Q(last_name__icontains=self.search_quary) |
+                                                   Q(first_name__icontains=self.search_quary) |
+                                                   Q(father_name__icontains=self.search_quary) |
+                                                   Q(position__icontains=self.search_quary) |
+                                                   Q(organisation__icontains=self.search_quary))
+        else:
+            queryset = AgentProject.objects.all()
+        return queryset
 
     def get_context_data(self):
         context = {}
         context['agent_list'] = self.get_queryset()
-
+        context['search_line'] = True
         return context
 
 
